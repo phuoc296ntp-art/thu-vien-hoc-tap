@@ -1,0 +1,1968 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thư viện Học tập Cá nhân - Nhập môn CNTT & Kỷ nguyên Số 4.0</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Plus Jakarta Sans hỗ trợ tiếng Việt sắc nét -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom scrollbar tinh tế giống Notion/Obsidian */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.35);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.6);
+    }
+
+    /* Hiệu ứng lật thẻ Flashcard 3D */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .transform-style-3d {
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 antialiased transition-colors duration-200 selection:bg-brand-500 selection:text-white">
+
+  <!-- Toast Notification Container (Thay thế alert()) -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Mobile Sidebar Backdrop -->
+  <div id="sidebar-backdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-30 hidden lg:hidden"></div>
+
+  <div class="flex min-h-screen">
+    <!-- ================= SIDEBAR ĐIỀU HƯỚNG ================= -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-80 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col">
+      <!-- Header thương hiệu -->
+      <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+            <i data-lucide="library" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h1 class="font-display font-bold text-sm leading-tight text-slate-900 dark:text-white">IT 4.0 Learning Hub</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Thư viện Học tập Cá nhân</p>
+          </div>
+        </div>
+        <button onclick="toggleSidebar(false)" class="lg:hidden p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Tiến độ học tập tổng quan -->
+      <div class="p-4 mx-3 mt-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60">
+        <div class="flex items-center justify-between text-xs font-semibold mb-1.5">
+          <span class="text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+            <i data-lucide="award" class="w-3.5 h-3.5 text-brand-600 dark:text-brand-400"></i>
+            Tiến độ hoàn thành
+          </span>
+          <span id="progress-text" class="text-brand-600 dark:text-brand-400 font-bold">0/8 chuyên đề</span>
+        </div>
+        <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+          <div id="progress-bar" class="h-full bg-gradient-to-r from-brand-600 to-cyan-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Ô tìm kiếm Live Search -->
+      <div class="px-3 pt-3">
+        <div class="relative">
+          <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input
+            type="text"
+            id="search-input"
+            oninput="handleSearch(this.value)"
+            placeholder="Tìm từ khóa (OSI, Cloud, Luật AI...)"
+            class="w-full pl-9 pr-8 py-2 text-sm rounded-xl bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-brand-500 focus:bg-white dark:focus:bg-slate-900 outline-none transition"
+          />
+          <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+            <i data-lucide="x-circle" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Công cụ ôn tập nhanh (Flashcards & Quiz) -->
+      <div class="px-3 pt-3 grid grid-cols-2 gap-2">
+        <button onclick="switchMode('flashcards')" id="nav-flashcards" class="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60 transition">
+          <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+          Flashcards
+        </button>
+        <button onclick="switchMode('quiz')" id="nav-quiz" class="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60 transition">
+          <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+          Trắc nghiệm 10 câu
+        </button>
+      </div>
+
+      <!-- Danh sách 8 Chuyên đề -->
+      <div class="px-4 pt-4 pb-1 flex items-center justify-between">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Danh mục 8 Chuyên đề</span>
+        <span class="text-[11px] text-slate-400">2025–2026</span>
+      </div>
+      <nav id="module-list" class="flex-1 overflow-y-auto px-3 pb-4 space-y-1">
+        <!-- Render động bằng JS -->
+      </nav>
+
+      <!-- Footer Sidebar -->
+      <div class="p-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+        <span>Lưu tự động LocalStorage</span>
+        <button onclick="resetProgressConfirm()" class="text-rose-500 hover:underline font-medium">Đặt lại</button>
+      </div>
+    </aside>
+
+    <!-- ================= MAIN WORKSPACE ================= -->
+    <div class="flex-1 lg:pl-80 flex flex-col min-w-0">
+      <!-- Top Navbar -->
+      <header class="sticky top-0 z-20 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-3 min-w-0">
+          <button onclick="toggleSidebar(true)" class="lg:hidden p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+          <div class="truncate">
+            <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <span>Nhập môn CNTT & Kỷ nguyên Số 4.0</span>
+              <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+              <span id="breadcrumb-current" class="font-medium text-brand-600 dark:text-brand-400 truncate">Chuyên đề 1</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+          <!-- Nút chuyển chế độ Sáng/Tối -->
+          <button onclick="toggleTheme()" title="Chuyển chế độ Sáng / Tối" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+            <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+            <i data-lucide="moon" class="w-4 h-4 block dark:hidden text-slate-700"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main id="main-content" class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-8 py-6 sm:py-8">
+        <!-- Nội dung chuyên đề / Flashcards / Quiz sẽ được render động tại đây -->
+      </main>
+    </div>
+  </div>
+
+  <!-- Modal xác nhận đặt lại (Thay thế confirm()) -->
+  <div id="reset-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
+      <div class="flex items-center gap-3 text-rose-600 mb-3">
+        <div class="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center">
+          <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+        </div>
+        <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Đặt lại dữ liệu học tập?</h3>
+      </div>
+      <p class="text-sm text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+        Thao tác này sẽ xóa trạng thái <strong>Đã hoàn thành</strong> của các chuyên đề và toàn bộ <strong>Ghi chú cá nhân</strong> đã lưu trên trình duyệt này.
+      </p>
+      <div class="flex justify-end gap-2.5">
+        <button onclick="closeResetModal()" class="px-4 py-2 rounded-xl text-sm font-medium border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Hủy bỏ</button>
+        <button onclick="executeReset()" class="px-4 py-2 rounded-xl text-sm font-semibold bg-rose-600 text-white hover:bg-rose-700 transition">Xác nhận đặt lại</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. CƠ SỞ DỮ LIỆU TOÀN DIỆN 8 CHUYÊN ĐỀ (TÀI LIỆU GỐC + KIẾN THỨC CHUẨN)
+    // =========================================================================
+    const MODULES_DATA = [
+      {
+        id: 1,
+        code: "Chuyên đề 01",
+        badge: "Tài liệu cốt lõi",
+        badgeColor: "indigo",
+        title: "Tổng quan CMCN 4.0, CNTT 4.0 & Chuyển đổi số (CĐS)",
+        subtitle: "Từ động cơ hơi nước đến kỷ nguyên vạn vật kết nối, trí tuệ nhân tạo và chiến lược Chuyển đổi số Quốc gia Việt Nam.",
+        icon: "cpu",
+        coverUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
+        keyTakeaways: [
+          {
+            title: "Lịch sử 4 cuộc Cách mạng Công nghiệp",
+            icon: "history",
+            points: [
+              "<strong>CMCN 1.0 (1760–1840):</strong> Cơ khí hóa nhờ năng lượng nước và động cơ hơi nước (James Watt).",
+              "<strong>CMCN 2.0 (1870–đầu TK 20):</strong> Điện khí hóa, dây chuyền sản xuất hàng loạt (Henry Ford) và động cơ đốt trong.",
+              "<strong>CMCN 3.0 (~1970):</strong> Tự động hóa nhờ máy tính điện tử, chất bán dẫn, PLC và sự ra đời của Internet.",
+              "<strong>CMCN 4.0 (~2010–nay):</strong> Kỷ nguyên số hợp nhất thế giới thực – ảo (Cyber-Physical Systems) dựa trên AI, IoT, Big Data."
+            ]
+          },
+          {
+            title: "4 Công nghệ trụ cột của CNTT 4.0",
+            icon: "sparkles",
+            points: [
+              "<strong>AI (Trí tuệ nhân tạo):</strong> Máy học (Machine Learning), Học sâu (Deep Learning), AI tạo sinh giúp máy tính suy luận & sáng tạo.",
+              "<strong>IoT (Internet vạn vật):</strong> Mạng lưới hàng tỷ cảm biến & thiết bị vật lý thu thập, trao đổi dữ liệu theo thời gian thực.",
+              "<strong>Big Data (Dữ liệu lớn - 3V):</strong> <em>Volume</em> (Khối lượng khổng lồ), <em>Velocity</em> (Tốc độ xử lý thời gian thực), <em>Variety</em> (Đa dạng định dạng).",
+              "<strong>Cloud Computing:</strong> Hạ tầng tính toán linh hoạt qua Internet, cung cấp sức mạnh lưu trữ & xử lý theo nhu cầu."
+            ]
+          },
+          {
+            title: "Chuyển đổi số (CĐS) Quốc gia & Toàn cầu",
+            icon: "globe",
+            points: [
+              "<strong>Tin học hóa vs CĐS:</strong> Tin học hóa là số hóa quy trình cũ lên máy tính; CĐS là tái cấu trúc toàn diện mô hình hoạt động dựa trên dữ liệu.",
+              "<strong>3 trụ cột CĐS Việt Nam:</strong> <em>Chính phủ số</em> (minh bạch, phục vụ), <em>Kinh tế số</em> (mục tiêu 20% GDP năm 2025, 30% năm 2030), <em>Xã hội số</em> (công dân số).",
+              "<strong>Lộ trình 3 bước:</strong> Nhận thức đúng -> Xây dựng chiến lược & thể chế -> Đầu tư công nghệ & phát triển nhân lực số.",
+              "<strong>Định hướng UNIDO & 17 SDGs:</strong> Phát triển công nghiệp bền vững, thu hẹp khoảng cách số toàn cầu."
+            ]
+          },
+          {
+            title: "Cơ hội nghề nghiệp & Kỹ năng sinh viên CNTT",
+            icon: "briefcase",
+            points: [
+              "<strong>Nhóm nghề mũi nhọn:</strong> Kỹ sư AI/Data, Kiến trúc sư Cloud, Chuyên gia An ninh mạng, Kỹ sư IoT, Chuyên viên Tư vấn Chuyển đổi số.",
+              "<strong>Bộ kỹ năng 4.0:</strong> Tư duy phản biện, khả năng tự học suốt đời (Lifelong Learning), làm chủ công cụ AI và kỹ năng giao tiếp liên ngành."
+            ]
+          }
+        ],
+        diagramTitle: "Sơ đồ Tiến hóa 4 cuộc Cách mạng Công nghiệp & 3 Trụ cột CĐS Việt Nam",
+        diagramSvg: `
+          <svg viewBox="0 0 820 260" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#4f46e5"/>
+                <stop offset="100%" stop-color="#06b6d4"/>
+              </linearGradient>
+            </defs>
+            <!-- Timeline line -->
+            <line x1="70" y1="75" x2="750" y2="75" stroke="#6366f1" stroke-width="3" stroke-dasharray="6 4"/>
+            <!-- Node 1.0 -->
+            <circle cx="100" cy="75" r="22" fill="#4f46e5"/>
+            <text x="100" y="80" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">1.0</text>
+            <rect x="30" y="108" width="140" height="62" rx="10" fill="#eef2ff" stroke="#c7d2fe"/>
+            <text x="100" y="128" text-anchor="middle" fill="#1e1b4b" font-size="11" font-weight="bold">1760 - 1840</text>
+            <text x="100" y="145" text-anchor="middle" fill="#3730a3" font-size="11">Động cơ hơi nước</text>
+            <text x="100" y="160" text-anchor="middle" fill="#4338ca" font-size="10">Cơ khí hóa</text>
+
+            <!-- Node 2.0 -->
+            <circle cx="300" cy="75" r="22" fill="#0284c7"/>
+            <text x="300" y="80" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">2.0</text>
+            <rect x="230" y="108" width="140" height="62" rx="10" fill="#e0f2fe" stroke="#bae6fd"/>
+            <text x="300" y="128" text-anchor="middle" fill="#0c4a6e" font-size="11" font-weight="bold">1870 - Đầu TK 20</text>
+            <text x="300" y="145" text-anchor="middle" fill="#0369a1" font-size="11">Điện năng & Dây chuyền</text>
+            <text x="300" y="160" text-anchor="middle" fill="#0284c7" font-size="10">Sản xuất hàng loạt</text>
+
+            <!-- Node 3.0 -->
+            <circle cx="500" cy="75" r="22" fill="#0d9488"/>
+            <text x="500" y="80" text-anchor="middle" fill="#fff" font-size="12" font-weight="bold">3.0</text>
+            <rect x="430" y="108" width="140" height="62" rx="10" fill="#ccfbf1" stroke="#99f6e4"/>
+            <text x="500" y="128" text-anchor="middle" fill="#134e4a" font-size="11" font-weight="bold">~ 1970</text>
+            <text x="500" y="145" text-anchor="middle" fill="#115e59" font-size="11">Máy tính & Internet</text>
+            <text x="500" y="160" text-anchor="middle" fill="#0f766e" font-size="10">Tự động hóa</text>
+
+            <!-- Node 4.0 -->
+            <circle cx="700" cy="75" r="25" fill="url(#g1)"/>
+            <text x="700" y="80" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">4.0</text>
+            <rect x="625" y="108" width="150" height="62" rx="10" fill="#4f46e5"/>
+            <text x="700" y="128" text-anchor="middle" fill="#e0e7ff" font-size="11" font-weight="bold">~ 2010 - Nay</text>
+            <text x="700" y="145" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="bold">AI • IoT • Big Data • Cloud</text>
+            <text x="700" y="160" text-anchor="middle" fill="#c7d2fe" font-size="10">Hợp nhất Thực - Ảo</text>
+
+            <!-- Bottom Pillar Bar -->
+            <rect x="30" y="192" width="745" height="50" rx="12" fill="#1e293b"/>
+            <text x="150" y="214" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="bold">1. CHÍNH PHỦ SỐ</text>
+            <text x="150" y="230" text-anchor="middle" fill="#cbd5e1" font-size="10">Dịch vụ công trực tuyến toàn trình</text>
+            <line x1="275" y1="202" x2="275" y2="232" stroke="#475569"/>
+            <text x="405" y="214" text-anchor="middle" fill="#34d399" font-size="11" font-weight="bold">2. KINH TẾ SỐ (20-30% GDP)</text>
+            <text x="405" y="230" text-anchor="middle" fill="#cbd5e1" font-size="10">Thương mại điện tử, Fintech, AI</text>
+            <line x1="535" y1="202" x2="535" y2="232" stroke="#475569"/>
+            <text x="655" y="214" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">3. XÃ HỘI SỐ</text>
+            <text x="655" y="230" text-anchor="middle" fill="#cbd5e1" font-size="10">VNeID, Y tế & Giáo dục số</text>
+          </svg>
+        `,
+        comparisonTable: {
+          headers: ["Tiêu chí", "Tin học hóa (Digitization / Digitalization)", "Chuyển đổi số (Digital Transformation)"],
+          rows: [
+            ["Bản chất", "Số hóa tài liệu giấy và đưa quy trình hiện có lên phần mềm máy tính.", "Thay đổi toàn diện mô hình kinh doanh, văn hóa và cách thức vận hành dựa trên dữ liệu."],
+            ["Công nghệ trọng tâm", "Phần mềm văn phòng, CSDL truyền thống, mạng nội bộ.", "AI, Big Data, Cloud Computing, IoT, Blockchain."],
+            ["Mức độ tác động", "Tối ưu hóa từng bộ phận riêng lẻ, giảm giấy tờ.", "Tạo ra giá trị mới, trải nghiệm khách hàng đột phá toàn tổ chức."]
+          ]
+        },
+        videos: [
+          {
+            title: "What is the Fourth Industrial Revolution? (WEF / CNBC)",
+            channel: "CNBC International",
+            duration: "06:42",
+            youtubeId: "v9rZOa3CUC8",
+            desc: "Giải thích trực quan lịch sử 4 cuộc cách mạng công nghiệp và cách AI, IoT định hình lại nền kinh tế toàn cầu."
+          },
+          {
+            title: "Big Data & 3V (Volume, Velocity, Variety) Explained",
+            channel: "IBM Technology",
+            duration: "05:18",
+            youtubeId: "bAyrObl7TYE",
+            desc: "Phân tích 3 đặc trưng cốt lõi của Dữ liệu lớn trong kỷ nguyên số."
+          }
+        ],
+        resources: [
+          { title: "Cổng Chuyển đổi số Quốc gia Việt Nam", url: "https://dx.gov.vn", tag: "Chính phủ VN" },
+          { title: "Cổng Dịch vụ công Quốc gia", url: "https://dichvucong.gov.vn", tag: "Dịch vụ công" },
+          { title: "Liên Hợp Quốc - 17 Mục tiêu Phát triển Bền vững (SDGs)", url: "https://sdgs.un.org/goals", tag: "UN / UNIDO" }
+        ]
+      },
+      {
+        id: 2,
+        code: "Chuyên đề 02",
+        badge: "Kiến thức bổ trợ chuẩn",
+        badgeColor: "cyan",
+        title: "Kiến trúc Máy tính & Phần cứng (Computer & Hardware)",
+        subtitle: "Khám phá nguyên lý hoạt động bên trong máy tính theo kiến trúc Von Neumann, hệ thống nhớ phân cấp và biểu diễn dữ liệu nhị phân.",
+        icon: "hard-drive",
+        coverUrl: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=1200&q=80",
+        keyTakeaways: [
+          {
+            title: "Kiến trúc Von Neumann (1945)",
+            icon: "cpu",
+            points: [
+              "<strong>CPU (Bộ xử lý trung tâm):</strong> Bộ não máy tính gồm 3 thành phần: <em>ALU</em> (Khối tính toán số học & logic), <em>CU</em> (Khối điều khiển giải mã lệnh) và <em>Registers</em> (Thanh ghi tốc độ siêu cao).",
+              "<strong>Bộ nhớ chính (Primary Memory):</strong> Lưu trữ chương trình và dữ liệu đang thực thi.",
+              "<strong>Thiết bị Nhập/Xuất (I/O):</strong> Bàn phím, chuột, cảm biến (Input) và Màn hình, loa, máy in (Output).",
+              "<strong>Bo mạch chủ (Mainboard) & Hệ thống Bus:</strong> Bus dữ liệu (Data Bus), Bus địa chỉ (Address Bus) và Bus điều khiển (Control Bus) kết nối mọi linh kiện."
+            ]
+          },
+          {
+            title: "Phân cấp Bộ nhớ (Memory Hierarchy)",
+            icon: "database",
+            points: [
+              "<strong>Cache (L1, L2, L3):</strong> Tích hợp ngay trong CPU, tốc độ cực nhanh giúp giảm độ trễ truy xuất RAM.",
+              "<strong>RAM (Random Access Memory):</strong> Bộ nhớ truy cập ngẫu nhiên, khả biến (mất dữ liệu khi tắt nguồn).",
+              "<strong>ROM (Read-Only Memory):</strong> Bộ nhớ chỉ đọc, lưu trữ chương trình khởi động cơ bản (BIOS / UEFI).",
+              "<strong>Bộ nhớ lưu trữ lâu dài:</strong> <em>SSD</em> (Ổ thể rắn dùng chip nhớ Flash, tốc độ cao, chống sốc) vs <em>HDD</em> (Đĩa từ cơ học, dung lượng lớn, giá rẻ)."
+            ]
+          },
+          {
+            title: "Hệ đếm & Biểu diễn thông tin số",
+            icon: "binary",
+            points: [
+              "<strong>Hệ Nhị phân (Binary - Cơ số 2):</strong> Chỉ sử dụng 2 ký số <code>0</code> và <code>1</code> tương ứng với hai trạng thái đóng/ngắt của bóng bán dẫn (Transistor).",
+              "<strong>Hệ Thập lục phân (Hexadecimal - Cơ số 16):</strong> Dùng <code>0–9</code> và <code>A–F</code> để viết gọn chuỗi nhị phân (1 ký tự Hex = 4 bit), dùng trong địa chỉ MAC, mã màu RGB.",
+              "<strong>Bảng mã ký tự:</strong> ASCII (7/8-bit tiếng Anh) và Unicode / UTF-8 (hỗ trợ đầy đủ tiếng Việt và mọi ngôn ngữ toàn cầu)."
+            ]
+          },
+          {
+            title: "Đơn vị đo lường dữ liệu máy tính",
+            icon: "ruler",
+            points: [
+              "<strong>Bit (b):</strong> Đơn vị nhỏ nhất (0 hoặc 1). <strong>1 Byte (B) = 8 bits</strong>.",
+              "<strong>Bội số chuẩn nhị phân / thập phân:</strong> 1 KB = 1024 B (hoặc 1000 B); 1 MB = 1024 KB; 1 GB = 1024 MB; 1 TB = 1024 GB; 1 PB (Petabyte) = 1024 TB."
+            ]
+          }
+        ],
+        diagramTitle: "Sơ đồ Kiến trúc Von Neumann & Tháp phân cấp tốc độ Bộ nhớ",
+        diagramSvg: `
+          <svg viewBox="0 0 820 250" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+            <!-- Input -->
+            <rect x="25" y="85" width="130" height="75" rx="12" fill="#e0f2fe" stroke="#0284c7" stroke-width="2"/>
+            <text x="90" y="118" text-anchor="middle" fill="#0369a1" font-size="12" font-weight="bold">THIẾT BỊ NHẬP</text>
+            <text x="90" y="136" text-anchor="middle" fill="#0c4a6e" font-size="10">(Input: Phím, Chuột)</text>
+
+            <!-- Arrow Input -> CPU -->
+            <line x1="155" y1="122" x2="215" y2="122" stroke="#0284c7" stroke-width="2.5"/>
+            <polygon points="215,117 225,122 215,127" fill="#0284c7"/>
+
+            <!-- CPU Box -->
+            <rect x="225" y="30" width="220" height="185" rx="14" fill="#eef2ff" stroke="#4f46e5" stroke-width="2.5"/>
+            <text x="335" y="54" text-anchor="middle" fill="#312e81" font-size="13" font-weight="bold">CPU (BỘ XỬ LÝ TRUNG TÂM)</text>
+
+            <rect x="245" y="68" width="180" height="36" rx="8" fill="#4f46e5"/>
+            <text x="335" y="90" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">CU (Khối Điều Khiển)</text>
+
+            <rect x="245" y="114" width="180" height="36" rx="8" fill="#6366f1"/>
+            <text x="335" y="136" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">ALU (Số học & Logic)</text>
+
+            <rect x="245" y="160" width="180" height="36" rx="8" fill="#818cf8"/>
+            <text x="335" y="182" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Registers & Cache</text>
+
+            <!-- Arrow CPU <-> Memory -->
+            <line x1="445" y1="105" x2="505" y2="105" stroke="#0d9488" stroke-width="2.5"/>
+            <polygon points="505,100 515,105 505,110" fill="#0d9488"/>
+            <line x1="515" y1="138" x2="455" y2="138" stroke="#0d9488" stroke-width="2.5"/>
+            <polygon points="455,133 445,138 455,143" fill="#0d9488"/>
+
+            <!-- Memory Box -->
+            <rect x="515" y="55" width="135" height="135" rx="12" fill="#ccfbf1" stroke="#0d9488" stroke-width="2"/>
+            <text x="582" y="85" text-anchor="middle" fill="#134e4a" font-size="12" font-weight="bold">BỘ NHỚ</text>
+            <text x="582" y="108" text-anchor="middle" fill="#115e59" font-size="11">RAM / ROM</text>
+            <text x="582" y="130" text-anchor="middle" fill="#115e59" font-size="11">Ổ cứng SSD/HDD</text>
+            <text x="582" y="155" text-anchor="middle" fill="#0f766e" font-size="10">Lưu lệnh & Dữ liệu</text>
+
+            <!-- Arrow CPU -> Output -->
+            <line x1="650" y1="122" x2="680" y2="122" stroke="#f59e0b" stroke-width="2.5"/>
+            <polygon points="680,117 690,122 680,127" fill="#f59e0b"/>
+
+            <!-- Output -->
+            <rect x="690" y="85" width="110" height="75" rx="12" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+            <text x="745" y="118" text-anchor="middle" fill="#92400e" font-size="12" font-weight="bold">XUẤT (I/O)</text>
+            <text x="745" y="136" text-anchor="middle" fill="#78350f" font-size="10">Màn hình, Loa</text>
+          </svg>
+        `,
+        comparisonTable: {
+          headers: ["Đặc điểm", "RAM (Bộ nhớ truy cập ngẫu nhiên)", "ROM (Bộ nhớ chỉ đọc)", "Ổ cứng SSD (Solid State Drive)"],
+          rows: [
+            ["Tính lưu trữ khi mất điện", "Mất toàn bộ dữ liệu (Volatile)", "Giữ nguyên dữ liệu (Non-volatile)", "Giữ nguyên dữ liệu lâu dài"],
+            ["Tốc độ truy xuất", "Rất nhanh (Nano giây)", "Trung bình", "Nhanh hơn HDD gấp 5–15 lần"],
+            ["Vai trò chính", "Chứa HĐH và ứng dụng đang chạy", "Chứa firmware khởi động BIOS/UEFI", "Lưu trữ hệ điều hành, phần mềm, tệp cá nhân"]
+          ]
+        },
+        videos: [
+          {
+            title: "How a CPU Works - Inside the Processor (CrashCourse Computer Science)",
+            channel: "CrashCourse",
+            duration: "11:46",
+            youtubeId: "FZGugFqdr60",
+            desc: "Minh họa sinh động cách ALU, Control Unit và thanh ghi phối hợp thực thi từng chu kỳ lệnh máy."
+          },
+          {
+            title: "Binary & Data Representation - CrashCourse Computer Science #4",
+            channel: "CrashCourse",
+            duration: "10:49",
+            youtubeId: "1GSjbWt0c9M",
+            desc: "Cách máy tính dùng số 0 và 1 để biểu diễn số học, văn bản Unicode, hình ảnh và âm thanh."
+          }
+        ],
+        resources: [
+          { title: "CrashCourse Computer Science (Toàn bộ khóa học)", url: "https://www.youtube.com/playlist?list=PL8dPuuaLjXtNlUrzyH5r6jN9ulIgZBpdo", tag: "Khóa học mở" },
+          { title: "HowStuffWorks - Inside a Computer Hardware", url: "https://computer.howstuffworks.com/inside-computer.htm", tag: "Tài liệu trực quan" }
+        ]
+      },
+      {
+        id: 3,
+        code: "Chuyên đề 03",
+        badge: "Kiến thức bổ trợ chuẩn",
+        badgeColor: "cyan",
+        title: "Hệ điều hành (Operating System)",
+        subtitle: "Lớp phần mềm hệ thống cốt lõi đóng vai trò 'nhạc trưởng' điều phối tài nguyên phần cứng và cung cấp môi trường cho ứng dụng chạy.",
+        icon: "layers",
+        coverUrl: "https://images.unsplash.com/photo-1629654297299-c8506221ca97?auto=format&fit=crop&w=1200&q=80",
+        keyTakeaways: [
+          {
+            title: "Vai trò trung gian của Hệ điều hành (OS)",
+            icon: "shield-check",
+            points: [
+              "<strong>Cầu nối Phần cứng – Người dùng:</strong> Che giấu sự phức tạp của phần cứng thông qua các lời gọi hệ thống (System Calls) và giao diện trực quan.",
+              "<strong>Nhân (Kernel) & Vỏ (Shell):</strong> <em>Kernel</em> giao tiếp trực tiếp với CPU/RAM/Thiết bị; <em>Shell</em> cung cấp giao diện dòng lệnh (CLI) hoặc đồ họa (GUI)."
+            ]
+          },
+          {
+            title: "4 Chức năng quản trị cốt lõi",
+            icon: "sliders",
+            points: [
+              "<strong>Quản lý tiến trình (Process Management):</strong> Lập lịch CPU (Scheduling), cho phép chạy đa nhiệm (Multitasking) và xử lý xung đột tiến trình.",
+              "<strong>Quản lý bộ nhớ (Memory Management):</strong> Cấp phát/thu hồi RAM cho từng ứng dụng và cơ chế bộ nhớ ảo (Virtual Memory).",
+              "<strong>Quản lý hệ thống tệp tin (File System):</strong> Tổ chức dữ liệu thành cây thư mục & tệp tin (NTFS, APFS, ext4, FAT32).",
+              "<strong>Quản lý thiết bị I/O:</strong> Điều khiển thiết bị ngoại vi thông qua trình điều khiển (Device Drivers)."
+            ]
+          },
+          {
+            title: "Hệ điều hành Máy tính để bàn & Máy chủ",
+            icon: "monitor",
+            points: [
+              "<strong>Microsoft Windows:</strong> Phổ biến nhất trên PC văn phòng, chơi game và doanh nghiệp (Windows 10/11, Windows Server).",
+              "<strong>Apple macOS:</strong> Nền tảng Unix-based tối ưu chặt chẽ giữa phần cứng Apple Silicon và đồ họa/lập trình.",
+              "<strong>Linux (Ubuntu, CentOS, Debian, Red Hat):</strong> Mã nguồn mở, bảo mật cao, thống trị trên hệ thống máy chủ (Server), Cloud và siêu máy tính."
+            ]
+          },
+          {
+            title: "Hệ điều hành Di động & Nhúng",
+            icon: "smartphone",
+            points: [
+              "<strong>Android (Google):</strong> Phát triển trên nhân Linux, mã nguồn mở (AOSP), chiếm thị phần smartphone lớn nhất thế giới.",
+              "<strong>iOS / iPadOS (Apple):</strong> Hệ sinh thái khép kín tối ưu hiệu năng, bảo mật và trải nghiệm cảm ứng."
+            ]
+          }
+        ],
+        diagramTitle: "Mô hình Phân lớp Hệ điều hành (Từ Phần cứng đến Người dùng)",
+        diagramSvg: `
+          <svg viewBox="0 0 820 230" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+            <rect x="60" y="15" width="700" height="44" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="410" y="42" text-anchor="middle" fill="#1e1b4b" font-size="13" font-weight="bold">1. NGƯỜI DÙNG & ỨNG DỤNG (Trình duyệt, Office, VS Code, Game)</text>
+
+            <rect x="60" y="69" width="700" height="44" rx="10" fill="#c7d2fe" stroke="#4f46e5" stroke-width="1.5"/>
+            <text x="410" y="96" text-anchor="middle" fill="#1e1b4b" font-size="13" font-weight="bold">2. GIAO DIỆN HỆ ĐIỀU HÀNH (GUI Đồ họa / CLI Dòng lệnh & System Calls)</text>
+
+            <rect x="60" y="123" width="700" height="44" rx="10" fill="#4f46e5"/>
+            <text x="410" y="150" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">3. NHÂN HỆ ĐIỀU HÀNH - KERNEL (Quản lý Tiến trình • RAM • File System • Drivers)</text>
+
+            <rect x="60" y="177" width="700" height="44" rx="10" fill="#0f172a"/>
+            <text x="410" y="204" text-anchor="middle" fill="#38bdf8" font-size="13" font-weight="bold">4. PHẦN CỨNG VẬT LÝ (CPU • RAM • Ổ cứng SSD • Card mạng • Thiết bị I/O)</text>
+          </svg>
+        `,
+        comparisonTable: {
+          headers: ["Hệ điều hành", "Loại giấy phép", "Thế mạnh nổi bật", "Môi trường ứng dụng chính"],
+          rows: [
+            ["Windows", "Thương mại (Độc quyền)", "Tương thích phần mềm rộng rãi, giao diện quen thuộc.", "Máy tính cá nhân, văn phòng, doanh nghiệp."],
+            ["Linux (Ubuntu/CentOS)", "Mã nguồn mở (GPL)", "Miễn phí, ổn định cao, tùy biến sâu, tiêu tốn ít tài nguyên.", "Máy chủ Web, Cloud, DevOps, Siêu máy tính."],
+            ["macOS", "Độc quyền (Phần cứng Apple)", "Nhân Unix ổn định, tối ưu pin & hiệu năng, hệ sinh thái đồng bộ.", "Thiết kế sáng tạo, lập trình viên, di động."]
+          ]
+        },
+        videos: [
+          {
+            title: "Operating Systems - CrashCourse Computer Science #18",
+            channel: "CrashCourse",
+            duration: "13:35",
+            youtubeId: "26QPDBe-NB8",
+            desc: "Lịch sử hình thành và cơ chế quản lý đa nhiệm, bộ nhớ của hệ điều hành hiện đại."
+          },
+          {
+            title: "Linux File System / Structure Explained in 5 Minutes",
+            channel: "ProgrammingKnowledge",
+            duration: "05:40",
+            youtubeId: "HbgzrKJvDRw",
+            desc: "Tìm hiểu cấu trúc thư mục gốc (/) trên hệ điều hành Linux."
+          }
+        ],
+        resources: [
+          { title: "Ubuntu Official Documentation", url: "https://help.ubuntu.com", tag: "Linux Docs" },
+          { title: "Microsoft Learn - Windows Architecture", url: "https://learn.microsoft.com/en-us/windows/", tag: "Microsoft" }
+        ]
+      },
+      {
+        id: 4,
+        code: "Chuyên đề 04",
+        badge: "Tài liệu cốt lõi",
+        badgeColor: "indigo",
+        title: "Phần mềm, Điện toán đám mây & Nền tảng (Software, Cloud, Platform)",
+        subtitle: "Từ chuẩn định nghĩa phần mềm IEEE 1991 đến kiến trúc Điện toán đám mây NIST với 3 mô hình dịch vụ IaaS, PaaS, SaaS.",
+        icon: "cloud",
+        coverUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80",
+        keyTakeaways: [
+          {
+            title: "Định nghĩa & Phân loại Phần mềm (IEEE 1991)",
+            icon: "package",
+            points: [
+              "<strong>Định nghĩa IEEE 1991:</strong> Phần mềm không chỉ là mã lệnh chương trình, mà bao gồm 4 thành phần: <em>Chương trình máy tính, Quy trình vận hành, Tài liệu hướng dẫn và Dữ liệu đi kèm</em>.",
+              "<strong>Phân loại theo chức năng:</strong> Phần mềm hệ thống (OS, Driver), Phần mềm ứng dụng (Office, nén file WinRAR/7-Zip, bộ gõ Unicode/TCVN3/VNI, trình duyệt, đọc PDF), Phần mềm chuyên dụng (ERP, CAD) và Phần mềm nhúng (Firmware).",
+              "<strong>Bản quyền & Nguồn mở:</strong> Phần mềm thương mại (Proprietary) vs Phần mềm nguồn mở (Open Source như Linux, LibreOffice) cho phép xem, sửa và phân phối mã nguồn."
+            ]
+          },
+          {
+            title: "5 Đặc tính cốt lõi của Điện toán đám mây (NIST)",
+            icon: "cloud-cog",
+            points: [
+              "<strong>1. On-demand self-service:</strong> Tự phục vụ theo nhu cầu, khởi tạo tài nguyên tức thì không cần can thiệp thủ công từ nhà cung cấp.",
+              "<strong>2. Broad network access:</strong> Truy cập mọi lúc, mọi nơi qua mạng Internet từ đa dạng thiết bị.",
+              "<strong>3. Resource pooling:</strong> Gom chung tài nguyên vật lý (Multi-tenancy) phục vụ nhiều khách hàng đồng thời.",
+              "<strong>4. Rapid elasticity:</strong> Co giãn tài nguyên nhanh chóng (tự động mở rộng khi cao điểm và thu hẹp khi thấp điểm).",
+              "<strong>5. Measured service:</strong> Đo lường và tính phí chính xác theo mức độ sử dụng (Pay-as-you-go)."
+            ]
+          },
+          {
+            title: "3 Mô hình Dịch vụ Đám mây (Cloud Service Models)",
+            icon: "server",
+            points: [
+              "<strong>IaaS (Infrastructure as a Service):</strong> Thuê hạ tầng ảo hóa (Máy chủ ảo, mạng, lưu trữ). Ví dụ: <em>Amazon EC2, Google Compute Engine, Azure VM</em>.",
+              "<strong>PaaS (Platform as a Service):</strong> Thuê nền tảng sẵn sàng để triển khai mã nguồn ứng dụng (hỗ trợ cả Public PaaS & Private PaaS). Ví dụ: <em>Heroku, Google App Engine, AWS Elastic Beanstalk</em>.",
+              "<strong>SaaS (Software as a Service):</strong> Sử dụng trực tiếp phần mềm hoàn chỉnh qua trình duyệt. Ví dụ: <em>Google Workspace, Microsoft 365, Salesforce, Zoom</em>."
+            ]
+          },
+          {
+            title: "4 Mô hình Triển khai Đám mây (Deployment Models)",
+            icon: "network",
+            points: [
+              "<strong>Public Cloud (Đám mây công cộng):</strong> Hạ tầng dùng chung qua Internet (AWS, Azure, GCP).",
+              "<strong>Private Cloud (Đám mây riêng):</strong> Hạ tầng dành riêng cho một tổ chức nhằm tối ưu bảo mật & tuân thủ.",
+              "<strong>Hybrid Cloud (Đám mây lai):</strong> Kết hợp linh hoạt giữa Private Cloud (dữ liệu nhạy cảm) và Public Cloud (tính toán mở rộng).",
+              "<strong>Community Cloud & Multi-Cloud:</strong> Đám mây cộng đồng dùng chung cho nhóm tổ chức cùng lĩnh vực; Multi-Cloud kết hợp nhiều nhà cung cấp đám mây."
+            ]
+          }
+        ],
+        diagramTitle: "Tháp Dịch vụ Điện toán Đám mây (IaaS • PaaS • SaaS) & Mức độ Quản lý",
+        diagramSvg: `
+          <svg viewBox="0 0 820 265" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+            <!-- SaaS -->
+            <rect x="190" y="15" width="440" height="54" rx="12" fill="#06b6d4"/>
+            <text x="410" y="39" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">SaaS (Software as a Service)</text>
+            <text x="410" y="57" text-anchor="middle" fill="#ecfeff" font-size="11">Người dùng cuối: Google Workspace, Microsoft 365, Zoom</text>
+
+            <!-- PaaS -->
+            <rect x="125" y="80" width="570" height="54" rx="12" fill="#3b82f6"/>
+            <text x="410" y="104" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">PaaS (Platform as a Service)</text>
+            <text x="410" y="122" text-anchor="middle" fill="#dbeafe" font-size="11">Lập trình viên: Heroku, Google App Engine, AWS Elastic Beanstalk</text>
+
+            <!-- IaaS -->
+            <rect x="60" y="145" width="700" height="54" rx="12" fill="#4f46e5"/>
+            <text x="410" y="169" text-anchor="middle" fill="#ffffff" font-size="14" font-weight="bold">IaaS (Infrastructure as a Service)</text>
+            <text x="410" y="187" text-anchor="middle" fill="#e0e7ff" font-size="11">Quản trị hệ thống: Amazon EC2, Azure Virtual Machines, Google Compute Engine</text>
+
+            <!-- Deployment Models Footer -->
+            <rect x="60" y="212" width="700" height="40" rx="10" fill="#1e293b"/>
+            <text x="410" y="236" text-anchor="middle" fill="#f8fafc" font-size="11" font-weight="bold">Mô hình triển khai:  Public Cloud  |  Private Cloud  |  Hybrid Cloud  |  Community & Multi-Cloud</text>
+          </svg>
+        `,
+        comparisonTable: {
+          headers: ["Mô hình dịch vụ", "Nhà cung cấp quản lý", "Khách hàng quản lý", "Ví dụ tiêu biểu"],
+          rows: [
+            ["IaaS", "Phần cứng vật lý, Mạng, Ảo hóa (Hypervisor)", "Hệ điều hành, Middleware, Runtime, Dữ liệu, Ứng dụng", "Amazon EC2, DigitalOcean Droplets"],
+            ["PaaS", "Từ phần cứng đến Hệ điều hành & Môi trường chạy", "Chỉ quản lý Mã nguồn ứng dụng và Dữ liệu", "Heroku, Google App Engine, Elastic Beanstalk"],
+            ["SaaS", "Toàn bộ từ hạ tầng đến phần mềm ứng dụng", "Chỉ sử dụng và cấu hình tài khoản người dùng", "Gmail, Google Docs, Microsoft 365"]
+          ]
+        },
+        videos: [
+          {
+            title: "IaaS, PaaS, and SaaS Explained (IBM Technology)",
+            channel: "IBM Technology",
+            duration: "07:15",
+            youtubeId: "eZLcyTenyV8",
+            desc: "So sánh trực quan qua ví dụ thực tế về 3 mô hình dịch vụ đám mây phổ biến nhất."
+          },
+          {
+            title: "What is Cloud Computing? (Amazon Web Services)",
+            channel: "Amazon Web Services",
+            duration: "03:37",
+            youtubeId: "mxT233EdY5c",
+            desc: "Tổng quan về điện toán đám mây và lợi ích co giãn linh hoạt của AWS."
+          }
+        ],
+        resources: [
+          { title: "NIST Definition of Cloud Computing (SP 800-145)", url: "https://csrc.nist.gov/pubs/sp/800/145/final", tag: "Chuẩn NIST" },
+          { title: "AWS Cloud Computing Concepts Hub", url: "https://aws.amazon.com/what-is-cloud-computing/", tag: "AWS Docs" }
+        ]
+      },
+      {
+        id: 5,
+        code: "Chuyên đề 05",
+        badge: "Tài liệu cốt lõi",
+        badgeColor: "indigo",
+        title: "Mạng máy tính, Internet & Internet vạn vật (Network, Internet, IoT)",
+        subtitle: "Từ lịch sử ARPANET, mô hình 7 tầng OSI, quá trình đóng gói PDU đến mạng 5G/6G và hệ sinh thái Internet vạn vật.",
+        icon: "wifi",
+        coverUrl: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80",
+        keyTakeaways: [
+          {
+            title: "Kiến trúc Mạng & Mô hình OSI vs TCP/IP",
+            icon: "share-2",
+            points: [
+              "<strong>Thành phần mạng:</strong> Phương tiện truyền dẫn (Cáp đồng xoắn đôi, Cáp quang tốc độ ánh sáng, Sóng vô tuyến) và Nút mạng (Switch chuyển mạch nội bộ, Router định tuyến liên mạng, Modem điều chế tín hiệu).",
+              "<strong>Mô hình OSI (7 tầng):</strong> 7. Application -> 6. Presentation -> 5. Session -> 4. Transport -> 3. Network -> 2. Data Link -> 1. Physical.",
+              "<strong>Quá trình đóng gói dữ liệu (Encapsulation - PDU):</strong> <em>Message/Data</em> (Ứng dụng) -> <em>Segment</em> (Giao vận) -> <em>Datagram/Packet</em> (Mạng) -> <em>Frame</em> (Liên kết dữ liệu) -> <em>Bits</em> (Vật lý).",
+              "<strong>Phân loại quy mô:</strong> LAN (Mạng cục bộ tốc độ cao) vs WAN (Mạng diện rộng kết nối xuyên quốc gia qua cáp quang biển)."
+            ]
+          },
+          {
+            title: "Internet, WWW & Các giao thức nền tảng",
+            icon: "globe-2",
+            points: [
+              "<strong>Cột mốc lịch sử:</strong> <em>1969</em> (ARPANET tiền thân Internet) -> <em>1982</em> (Chuẩn hóa bộ giao thức TCP/IP) -> <em>1991</em> (Tim Berners-Lee phát minh World Wide Web - WWW).",
+              "<strong>Giao thức IP (IPv4 vs IPv6):</strong> IPv4 dài 32-bit (~4,3 tỷ địa chỉ, đã cạn kiệt) được thay thế dần bởi IPv6 dài 128-bit (3,4 × 10³⁸ địa chỉ).",
+              "<strong>TCP vs UDP:</strong> <em>TCP</em> hướng kết nối, kiểm tra lỗi và đảm bảo tin cậy (Web, Email); <em>UDP</em> không kết nối, tốc độ tối đa, độ trễ thấp (Livestream, Gaming, VoIP)."
+            ]
+          },
+          {
+            title: "Mạng không dây & Tiến hóa Di động 1G -> 6G",
+            icon: "radio",
+            points: [
+              "<strong>Wi-Fi (IEEE 802.11) & Bluetooth:</strong> Wi-Fi sử dụng cơ chế tránh xung đột <em>CSMA/CA</em>; Bluetooth phục vụ mạng cá nhân tầm ngắn (PAN).",
+              "<strong>1G -> 4G LTE:</strong> 1G (Thoại Analog) -> 2G (GSM kỹ thuật số, SMS) -> 3G (Truyền dữ liệu di động) -> 4G LTE (Kiến trúc All-IP tốc độ cao).",
+              "<strong>5G & Tầm nhìn 6G:</strong> 5G đạt tốc độ >1 Gbps, độ trễ cực thấp phục vụ IoT; <strong>6G</strong> hướng tới tốc độ <em>1 Tbps</em>, độ trễ <em>&lt;1 ms</em>, tích hợp <em>Native AI</em> và mạng không gian 3D kết hợp vệ tinh quỹ đạo thấp."
+            ]
+          },
+          {
+            title: "Internet vạn vật (IoT) & Thách thức bảo mật",
+            icon: "cpu",
+            points: [
+              "<strong>Vòng lặp tự động IoT:</strong> Cảm nhận (Sensors thu thập môi trường) -> Truyền & Xử lý (Cloud/Edge AI) -> Phản ứng (Actuators điều khiển thiết bị).",
+              "<strong>Ứng dụng thực tiễn:</strong> Thành phố thông minh (giao thông, chiếu sáng), Y tế thông minh (thiết bị đeo theo dõi nhịp tim), Nhà thông minh (Smart Home).",
+              "<strong>Thách thức bảo mật:</strong> Thiết bị IoT cấu hình yếu dễ bị chiếm quyền điều khiển tạo thành mạng Botnet tấn công DDoS."
+            ]
+          }
+        ],
+        diagramTitle: "Quá trình Đóng gói Dữ liệu (PDU Encapsulation) & Tiến hóa Mạng Di động",
+        diagramSvg: `
+          <svg viewBox="0 0 820 255" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+            <text x="410" y="22" text-anchor="middle" fill="#4f46e5" font-size="12" font-weight="bold">QUÁ TRÌNH ĐÓNG GÓI DỮ LIỆU QUA CÁC TẦNG MẠNG (PDU)</text>
+            <!-- PDU Boxes -->
+            <rect x="25" y="40" width="135" height="65" rx="10" fill="#eef2ff" stroke="#6366f1"/>
+            <text x="92" y="66" text-anchor="middle" fill="#1e1b4b" font-size="12" font-weight="bold">1. Message</text>
+            <text x="92" y="85" text-anchor="middle" fill="#4338ca" font-size="10">Tầng Ứng dụng</text>
+
+            <polygon points="166,72 178,66 178,78" fill="#6366f1" transform="rotate(180 172 72)"/>
+
+            <rect x="184" y="40" width="135" height="65" rx="10" fill="#e0e7ff" stroke="#4f46e5"/>
+            <text x="251" y="66" text-anchor="middle" fill="#1e1b4b" font-size="12" font-weight="bold">2. Segment</text>
+            <text x="251" y="85" text-anchor="middle" fill="#3730a3" font-size="10">Tầng Giao vận (TCP/UDP)</text>
+
+            <polygon points="325,72 337,66 337,78" fill="#4f46e5" transform="rotate(180 331 72)"/>
+
+            <rect x="343" y="40" width="135" height="65" rx="10" fill="#bae6fd" stroke="#0284c7"/>
+            <text x="410" y="66" text-anchor="middle" fill="#0c4a6e" font-size="12" font-weight="bold">3. Datagram</text>
+            <text x="410" y="85" text-anchor="middle" fill="#0369a1" font-size="10">Tầng Mạng (IP)</text>
+
+            <polygon points="484,72 496,66 496,78" fill="#0284c7" transform="rotate(180 490 72)"/>
+
+            <rect x="502" y="40" width="135" height="65" rx="10" fill="#99f6e4" stroke="#0d9488"/>
+            <text x="569" y="66" text-anchor="middle" fill="#134e4a" font-size="12" font-weight="bold">4. Frame</text>
+            <text x="569" y="85" text-anchor="middle" fill="#0f766e" font-size="10">Tầng Liên kết (MAC)</text>
+
+            <polygon points="643,72 655,66 655,78" fill="#0d9488" transform="rotate(180 649 72)"/>
+
+            <rect x="661" y="40" width="135" height="65" rx="10" fill="#0f172a"/>
+            <text x="728" y="66" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="bold">5. Bits (0101)</text>
+            <text x="728" y="85" text-anchor="middle" fill="#94a3b8" font-size="10">Tầng Vật lý (Cáp/Sóng)</text>
+
+            <!-- Mobile Generation Evolution -->
+            <rect x="25" y="130" width="770" height="105" rx="14" fill="#1e293b"/>
+            <text x="410" y="153" text-anchor="middle" fill="#f8fafc" font-size="11" font-weight="bold">TIẾN HÓA MẠNG DI ĐỘNG TỪ 1G ĐẾN TẦM NHÌN 6G</text>
+            <text x="85" y="182" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="bold">1G (1980s)</text>
+            <text x="85" y="200" text-anchor="middle" fill="#cbd5e1" font-size="10">Thoại Analog</text>
+
+            <text x="210" y="182" text-anchor="middle" fill="#94a3b8" font-size="11" font-weight="bold">2G (1990s)</text>
+            <text x="210" y="200" text-anchor="middle" fill="#cbd5e1" font-size="10">GSM / SMS số</text>
+
+            <text x="335" y="182" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="bold">3G (2000s)</text>
+            <text x="335" y="200" text-anchor="middle" fill="#cbd5e1" font-size="10">Internet di động</text>
+
+            <text x="465" y="182" text-anchor="middle" fill="#34d399" font-size="11" font-weight="bold">4G LTE (2010s)</text>
+            <text x="465" y="200" text-anchor="middle" fill="#cbd5e1" font-size="10">All-IP / Video HD</text>
+
+            <text x="600" y="182" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">5G (2020s)</text>
+            <text x="600" y="200" text-anchor="middle" fill="#cbd5e1" font-size="10">&gt;1Gbps • IoT</text>
+
+            <text x="730" y="182" text-anchor="middle" fill="#f472b6" font-size="11" font-weight="bold">6G (2030+)</text>
+            <text x="730" y="200" text-anchor="middle" fill="#fbcfe8" font-size="10">1 Tbps • &lt;1ms • AI 3D</text>
+          </svg>
+        `,
+        comparisonTable: {
+          headers: ["Tiêu chí", "Giao thức TCP", "Giao thức UDP"],
+          rows: [
+            ["Cơ chế kết nối", "Hướng kết nối (Bắt tay 3 bước - Three-way Handshake)", "Không kết nối (Connectionless) - Gửi trực tiếp"],
+            ["Độ tin cậy", "Cao: Đảm bảo gói tin đến đủ và đúng thứ tự, gửi lại nếu mất", "Không đảm bảo: Chấp nhận rơi rớt gói tin để ưu tiên tốc độ"],
+            ["Ứng dụng thực tế", "Duyệt Web (HTTP/HTTPS), Gửi Email (SMTP), Truyền file (FTP)", "Xem video trực tiếp, Game online, Gọi thoại/Video (VoIP)"]
+          ]
+        },
+        videos: [
+          {
+            title: "OSI Model Explained | Real World Examples",
+            channel: "NetworkChuck",
+            duration: "14:22",
+            youtubeId: "0y6FtKsg6J4",
+            desc: "Giải thích dễ hiểu 7 tầng mô hình OSI và cách dữ liệu di chuyển qua từng tầng mạng."
+          },
+          {
+            title: "How Does the Internet Work? (CrashCourse Computer Science #29)",
+            channel: "CrashCourse",
+            duration: "11:57",
+            youtubeId: "AEaKrq3SpW8",
+            desc: "Từ gói tin IP, Router định tuyến đến hệ thống tên miền DNS."
+          }
+        ],
+        resources: [
+          { title: "MDN Web Docs - How the Internet Works", url: "https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/How_does_the_Internet_work", tag: "MDN Docs" },
+          { title: "Cloudflare Learning Center - What is the Internet?", url: "https://www.cloudflare.com/learning/network-layer/how-does-the-internet-work/", tag: "Cloudflare" }
+        ]
+      },
+      {
+        id: 6,
+        code: "Chuyên đề 06",
+        badge: "Tài liệu cốt lõi",
+        badgeColor: "indigo",
+        title: "Tư duy lập trình & Tự động hóa (Computational Thinking & IT Automation)",
+        subtitle: "Từ 4 trụ cột Tư duy máy tính, tự động hóa doanh nghiệp BPA/RPA/IaC đến làn sóng Vibe Coding lập trình hội thoại cùng AI.",
+        icon: "code-2",
+        coverUrl: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=1200&q=80",
+        keyTakeaways: [
+          {
+            title: "Tư duy máy tính (CT) & Bản chất Lập trình",
+            icon: "brain-circuit",
+            points: [
+              "<strong>Cầu nối Người – Máy:</strong> Lập trình biến <em>Ý tưởng con người</em> -> <em>Logic & Cú pháp chính xác</em> -> <em>Thực thi tự động trên máy</em>.",
+              "<strong>Người vs Máy:</strong> Con người giỏi sáng tạo, thấu cảm và xử lý ngữ cảnh mơ hồ; Máy tính vượt trội về tốc độ tính toán lặp lại chính xác tuyệt đối nhưng không tự suy diễn ngoài lệnh.",
+              "<strong>Giới hạn thuật toán:</strong> Tồn tại những bài toán nan giải (Intractable / NP-hard như bài toán Người du lịch TSP quy mô lớn) đòi hỏi thuật toán xấp xỉ."
+            ]
+          },
+          {
+            title: "4 Trụ cột Tư duy Máy tính (Computational Thinking)",
+            icon: "git-branch",
+            points: [
+              "<strong>1. Phân rã (Decomposition):</strong> Chia nhỏ bài toán lớn, phức tạp thành các module/vấn đề con dễ giải quyết.",
+              "<strong>2. Nhận diện khuôn mẫu (Pattern Recognition):</strong> Tìm kiếm điểm tương đồng, quy luật lặp lại giữa các vấn đề.",
+              "<strong>3. Trừu tượng hóa (Abstraction):</strong> Lọc bỏ chi tiết rườm rà, chỉ giữ lại bản chất cốt lõi để mô hình hóa.",
+              "<strong>4. Thiết kế thuật toán (Algorithm Design):</strong> Xây dựng chuỗi các bước chỉ dẫn rõ ràng, hữu hạn để giải quyết vấn đề."
+            ]
+          },
+          {
+            title: "Tự động hóa IT (IT Automation): BPA, RPA & IaC",
+            icon: "bot",
+            points: [
+              "<strong>Cơ chế hoạt động:</strong> Sự kiện kích hoạt (<em>Trigger</em>) -> Kịch bản xử lý (<em>Scripts</em>) -> Chuỗi quy trình tự động (<em>Workflows</em>).",
+              "<strong>BPA (Business Process Automation):</strong> Tự động hóa quy trình nghiệp vụ toàn doanh nghiệp ở tầm vĩ mô.",
+              "<strong>RPA (Robotic Process Automation):</strong> Robot phần mềm mô phỏng thao tác chuột/phím trên giao diện người dùng (nhập liệu hóa đơn, trích xuất báo cáo).",
+              "<strong>IaC (Infrastructure as Code):</strong> Quản lý và cấp phát hạ tầng máy chủ, mạng bằng mã cấu hình (Terraform, Ansible). Ứng dụng trong <em>Onboarding nhân sự, Server Provisioning, Backup & Security</em>."
+            ]
+          },
+          {
+            title: "Low-code, No-code & Kỷ nguyên Vibe Coding",
+            icon: "wand-2",
+            points: [
+              "<strong>Low-code & No-code:</strong> Xây dựng ứng dụng nhanh bằng giao diện kéo-thả trực quan (ít mã hoặc không cần viết mã).",
+              "<strong>Vibe Coding (Lập trình qua hội thoại với AI):</strong> Quy trình 4 bước: <em>Mô tả ý tưởng bằng ngôn ngữ tự nhiên -> AI sinh mã -> Chạy thực thi -> Tinh chỉnh (Iterate)</em> cùng <em>Vibe Deploying</em>.",
+              "<strong>Chuyển dịch vai trò & Rủi ro:</strong> Lập trình viên chuyển từ 'người gõ từng dòng cú pháp' sang <em>Kiến trúc sư điều phối & Kiểm định chất lượng</em>, tránh rủi ro 'Hộp đen AI' (mã chạy được nhưng không hiểu logic bảo mật bên trong)."
+            ]
+          }
+        ],
+        diagramTitle: "4 Trụ cột Tư duy Máy tính & Vòng lặp Vibe Coding",
+        diagramSvg: `
+          <svg viewBox="0 0 820 255" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+            <text x="410" y="22" text-anchor="middle" fill="#4f46e5" font-size="12" font-weight="bold">4 TRỤ CỘT TƯ DUY MÁY TÍNH (COMPUTATIONAL THINKING)</text>
+            
+            <rect x="25" y="38" width="180" height="82" rx="12" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="115" y="63" text-anchor="middle" fill="#312e81" font-size="12" font-weight="bold">1. Phân rã</text>
+            <text x="115" y="80" text-anchor="middle" fill="#4338ca" font-size="10">(Decomposition)</text>
+            <text x="115" y="100" text-anchor="middle" fill="#475569" font-size="10">Chia nhỏ bài toán lớn</text>
+
+            <rect x="220" y="38" width="180" height="82" rx="12" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+            <text x="310" y="63" text-anchor="middle" fill="#0c4a6e" font-size="12" font-weight="bold">2. Nhận diện mẫu</text>
+            <text x="310" y="80" text-anchor="middle" fill="#0369a1" font-size="10">(Pattern Recognition)</text>
+            <text x="310" y="100" text-anchor="middle" fill="#475569" font-size="10">Tìm quy luật lặp lại</text>
+
+            <rect x="415" y="38" width="180" height="82" rx="12" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5"/>
+            <text x="505" y="63" text-anchor="middle" fill="#134e4a" font-size="12" font-weight="bold">3. Trừu tượng hóa</text>
+            <text x="505" y="80" text-anchor="middle" fill="#0f766e" font-size="10">(Abstraction)</text>
+            <text x="505" y="100" text-anchor="middle" fill="#475569" font-size="10">Giữ lại cốt lõi quan trọng</text>
+
+            <rect x="610" y="38" width="185" height="82" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+            <text x="702" y="63" text-anchor="middle" fill="#78350f" font-size="12" font-weight="bold">4. Thuật toán</text>
+            <text x="702" y="80" text-anchor="middle" fill="#b45309" font-size="10">(Algorithm Design)</text>
+            <text x="702" y="100" text-anchor="middle" fill="#475569" font-size="10">Từng bước giải quyết</text>
+
+            <!-- Vibe Coding Flow -->
+            <rect x="25" y="142" width="770" height="92" rx="14" fill="#0f172a"/>
+            <text x="410" y="166" text-anchor="middle" fill="#38bdf8" font-size="11" font-weight="bold">QUY TRÌNH VIBE CODING & TỰ ĐỘNG HÓA HIỆN ĐẠI</text>
+            <rect x="55" y="180" width="150" height="38" rx="8" fill="#1e293b" stroke="#38bdf8"/>
+            <text x="130" y="203" text-anchor="middle" fill="#fff" font-size="11">1. Mô tả ý tưởng</text>
+
+            <rect x="240" y="180" width="150" height="38" rx="8" fill="#1e293b" stroke="#818cf8"/>
+            <text x="315" y="203" text-anchor="middle" fill="#fff" font-size="11">2. AI tạo mã nguồn</text>
+
+            <rect x="425" y="180" width="150" height="38" rx="8" fill="#1e293b" stroke="#34d399"/>
+            <text x="500" y="203" text-anchor="middle" fill="#fff" font-size="11">3. Thực thi & Kiểm thử</text>
+
+            <rect x="610" y="180" width="155" height="38" rx="8" fill="#4f46e5"/>
+            <text x="687" y="203" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">4. Tinh chỉnh & Deploy</text>
+          </svg>
+        `,
+        comparisonTable: {
+          headers: ["Cấp độ Tự động hóa", "Phạm vi tác động", "Công nghệ / Công cụ tiêu biểu", "Ví dụ ứng dụng"],
+          rows: [
+            ["BPA (Business Process Automation)", "Toàn quy trình nghiệp vụ doanh nghiệp (Vĩ mô)", "Camunda, Microsoft Power Automate, Kissflow", "Tự động duyệt quy trình Onboarding nhân sự mới."],
+            ["RPA (Robotic Process Automation)", "Cấp độ giao diện người dùng (UI) ứng dụng", "UiPath, Automation Anywhere, Blue Prism", "Bot tự đọc PDF hóa đơn và nhập vào phần mềm kế toán."],
+            ["IaC (Infrastructure as Code)", "Cấp độ hạ tầng máy chủ, mạng & đám mây", "Terraform, Ansible, AWS CloudFormation", "Tự động khởi tạo 50 máy chủ Cloud bằng 1 file cấu hình."]
+          ]
+        },
+        videos: [
+          {
+            title: "Computational Thinking: What Is It? How Is It Used?",
+            channel: "BBC Learning",
+            duration: "03:45",
+            youtubeId: "qbnTZcj0ugI",
+            desc: "Video ngắn gọn giải thích 4 trụ cột của Tư duy máy tính qua ví dụ đời sống."
+          },
+          {
+            title: "What is RPA (Robotic Process Automation)? (IBM Technology)",
+            channel: "IBM Technology",
+            duration: "06:12",
+            youtubeId: "51783558478",
+            desc: "Phân biệt RPA với tự động hóa truyền thống và AI trong doanh nghiệp."
+          }
+        ],
+        resources: [
+          { title: "Google for Education - Computational Thinking", url: "https://edu.google.com/resources/programs/exploring-computational-thinking/", tag: "Google Edu" },
+          { title: "HashiCorp Terraform - Infrastructure as Code Docs", url: "https://developer.hashicorp.com/terraform/intro", tag: "IaC Docs" }
+        ]
+      },
+      {
+        id: 7,
+        code: "Chuyên đề 07",
+        badge: "Kiến thức bổ trợ chuẩn",
+        badgeColor: "cyan",
+        title: "Trí tuệ nhân tạo & Dữ liệu trong Học tập, Làm việc (AI & Data)",
+        subtitle: "Làm chủ AI tạo sinh (Generative AI), kỹ thuật thiết kế câu lệnh (Prompt Engineering) và năng lực đọc hiểu dữ liệu (Data Literacy).",
+        icon: "sparkles",
+        coverUrl: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=80",
+        keyTakeaways: [
+          {
+            title: "AI Tạo sinh (Generative AI) & Mô hình Ngôn ngữ lớn (LLM)",
+            icon: "bot",
+            points: [
+              "<strong>Cơ chế hoạt động:</strong> Các mô hình như Gemini, GPT, Claude học từ hàng nghìn tỷ token văn bản/đa phương tiện để dự đoán và tổng hợp nội dung mới.",
+              "<strong>Ứng dụng học thuật & công việc:</strong> Tóm tắt tài liệu nghiên cứu, giải thích khái niệm khó, hỗ trợ viết mã, dịch thuật ngữ chuyên ngành và lên kế hoạch dự án.",
+              "<strong>Kiểm soát ảo giác AI (Hallucination):</strong> Luôn đối chiếu thông tin AI cung cấp với nguồn học thuật chính thống."
+            ]
+          },
+          {
+            title: "Kỹ thuật Đặt câu lệnh (Prompt Engineering)",
+            icon: "message-square-code",
+            points: [
+              "<strong>Công thức R-C-T-F chuẩn:</strong> <em>Role</em> (Vai trò chuyên gia) + <em>Context</em> (Bối cảnh cụ thể) + <em>Task</em> (Nhiệm vụ rõ ràng) + <em>Format</em> (Định dạng đầu ra mong muốn).",
+              "<strong>Kỹ thuật nâng cao:</strong> <em>Few-shot prompting</em> (cung cấp 2–3 ví dụ mẫu) và <em>Chain-of-Thought</em> (yêu cầu AI suy luận từng bước trước khi kết luận)."
+            ]
+          },
+          {
+            title: "Tư duy Dữ liệu (Data Literacy) & Quy trình 4 bước",
+            icon: "bar-chart-3",
+            points: [
+              "<strong>1. Thu thập dữ liệu (Collection):</strong> Khảo sát, API, cơ sở dữ liệu mở (Open Data) đảm bảo tính đại diện.",
+              "<strong>2. Làm sạch dữ liệu (Data Cleaning):</strong> Xử lý dữ liệu thiếu (Missing values), trùng lặp và sai định dạng (chiếm ~60-70% thời gian phân tích).",
+              "<strong>3. Phân tích (Analysis):</strong> Thống kê mô tả, tìm xu hướng và mối tương quan.",
+              "<strong>4. Trực quan hóa (Visualization):</strong> Kể chuyện bằng dữ liệu (Data Storytelling) qua biểu đồ cột, đường, phân tán."
+            ]
+          },
+          {
+            title: "Bộ công cụ AI & Dữ liệu thiết yếu cho Sinh viên",
+            icon: "wrench",
+            points: [
+              "<strong>Trợ lý AI nghiên cứu:</strong> Google Gemini, NotebookLM (tổng hợp tài liệu cá nhân), Perplexity AI (tìm kiếm kèm trích dẫn).",
+              "<strong>Phân tích & Trực quan hóa dữ liệu:</strong> Microsoft Excel / Google Sheets (Pivot Table), Python (Pandas, Matplotlib), Power BI, Tableau."
+            ]
+          }
+        ],
+        diagramTitle: "Khung Thiết kế Prompt R-C-T-F & Chu trình Khoa học Dữ liệu",
+        diagramSvg: `
+          <svg viewBox="0 0 820 245" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+            <text x="410" y="22" text-anchor="middle" fill="#4f46e5" font-size="12" font-weight="bold">CÔNG THỨC PROMPT ENGINEERING HIỆU QUẢ (R - C - T - F)</text>
+            
+            <rect x="25" y="38" width="180" height="75" rx="12" fill="#4f46e5"/>
+            <text x="115" y="65" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">R - ROLE</text>
+            <text x="115" y="85" text-anchor="middle" fill="#e0e7ff" font-size="10">"Hãy đóng vai giảng viên CNTT..."</text>
+
+            <rect x="220" y="38" width="180" height="75" rx="12" fill="#0284c7"/>
+            <text x="310" y="65" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">C - CONTEXT</text>
+            <text x="310" y="85" text-anchor="middle" fill="#e0f2fe" font-size="10">"Cho sinh viên năm nhất..."</text>
+
+            <rect x="415" y="38" width="180" height="75" rx="12" fill="#0d9488"/>
+            <text x="505" y="65" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">T - TASK</text>
+            <text x="505" y="85" text-anchor="middle" fill="#ccfbf1" font-size="10">"So sánh TCP và UDP..."</text>
+
+            <rect x="610" y="38" width="185" height="75" rx="12" fill="#d97706"/>
+            <text x="702" y="65" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="bold">F - FORMAT</text>
+            <text x="702" y="85" text-anchor="middle" fill="#fef3c7" font-size="10">"Trình bày dạng bảng 3 cột"</text>
+
+            <!-- Data Pipeline -->
+            <rect x="25" y="135" width="770" height="90" rx="14" fill="#f1f5f9" stroke="#cbd5e1"/>
+            <text x="410" y="158" text-anchor="middle" fill="#0f172a" font-size="11" font-weight="bold">QUY TRÌNH XỬ LÝ DỮ LIỆU RA QUYẾT ĐỊNH (DATA LITERACY)</text>
+            <text x="125" y="186" text-anchor="middle" fill="#4f46e5" font-size="12" font-weight="bold">1. Thu thập (Collect)</text>
+            <text x="125" y="203" text-anchor="middle" fill="#475569" font-size="10">Khảo sát, API, Open Data</text>
+
+            <text x="315" y="186" text-anchor="middle" fill="#0284c7" font-size="12" font-weight="bold">2. Làm sạch (Clean)</text>
+            <text x="315" y="203" text-anchor="middle" fill="#475569" font-size="10">Loại bỏ nhiễu & trùng lặp</text>
+
+            <text x="505" y="186" text-anchor="middle" fill="#0d9488" font-size="12" font-weight="bold">3. Phân tích (Analyze)</text>
+            <text x="505" y="203" text-anchor="middle" fill="#475569" font-size="10">Thống kê, tìm quy luật</text>
+
+            <text x="695" y="186" text-anchor="middle" fill="#d97706" font-size="12" font-weight="bold">4. Trực quan (Visualize)</text>
+            <text x="695" y="203" text-anchor="middle" fill="#475569" font-size="10">Biểu đồ & Ra quyết định</text>
+          </svg>
+        `,
+        comparisonTable: {
+          headers: ["Cách đặt câu lệnh", "Ví dụ Prompt", "Chất lượng kết quả"],
+          rows: [
+            ["Prompt chung chung", "\"Viết cho tôi về điện toán đám mây.\"", "Lan man, thiếu trọng tâm, khó dùng để ôn thi."],
+            ["Prompt chuẩn R-C-T-F", "\"Đóng vai giảng viên CNTT (Role), tóm tắt 3 mô hình IaaS, PaaS, SaaS cho sinh viên năm nhất (Context & Task) dưới dạng bảng so sánh kèm ví dụ thực tế (Format).\"", "Chính xác, cô đọng, bám sát chuẩn đầu ra học phần."]
+          ]
+        },
+        videos: [
+          {
+            title: "Prompt Engineering Tutorial – Master ChatGPT and LLM Responses",
+            channel: "freeCodeCamp.org",
+            duration: "12:15",
+            youtubeId: "_ZvnD73m40o",
+            desc: "Hướng dẫn thực hành các kỹ thuật đặt câu lệnh hiệu quả trong học tập và lập trình."
+          },
+          {
+            title: "Data Analytics for Beginners (Coursera / Google)",
+            channel: "Google Career Certificates",
+            duration: "06:30",
+            youtubeId: "yZvFH7B6gKI",
+            desc: "Tổng quan tư duy dữ liệu và cách biến dữ liệu thô thành thông tin hữu ích."
+          }
+        ],
+        resources: [
+          { title: "Google AI - Prompting Guide 101", url: "https://ai.google/discover/prompting-guide/", tag: "Google AI" },
+          { title: "Kaggle - Kho dữ liệu mở & Thực hành Khoa học Dữ liệu", url: "https://www.kaggle.com/datasets", tag: "Open Data" }
+        ]
+      },
+      {
+        id: 8,
+        code: "Chuyên đề 08",
+        badge: "Tài liệu cốt lõi",
+        badgeColor: "indigo",
+        title: "An toàn thông tin & Đạo đức số (Information Security & Digital Ethics)",
+        subtitle: "Từ tam giác bảo mật CIA, khung đạo đức AI toàn cầu, hệ thống pháp luật số Việt Nam 2025–2026 đến phòng chống Deepfake.",
+        icon: "shield-alert",
+        coverUrl: "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80",
+        keyTakeaways: [
+          {
+            title: "Tam giác Bảo mật CIA & Chuẩn ISO 27000",
+            icon: "lock",
+            points: [
+              "<strong>Confidentiality (Tính Bảo mật):</strong> Đảm bảo thông tin chỉ được truy cập bởi người có thẩm quyền (Mã hóa, Xác thực đa yếu tố MFA).",
+              "<strong>Integrity (Tính Toàn vẹn):</strong> Dữ liệu chính xác, không bị sửa đổi trái phép trên đường truyền hay lưu trữ (Hàm băm Hash, Chữ ký số).",
+              "<strong>Availability (Tính Sẵn sàng):</strong> Hệ thống luôn hoạt động ổn định khi người dùng hợp pháp cần (Sao lưu, Chống DDoS).",
+              "<strong>ISMS (ISO/IEC 27000) & Yếu tố Con người:</strong> Công nghệ chỉ là công cụ; <em>con người</em> thường là mắt xích yếu nhất (tấn công lừa đảo Social Engineering / Phishing)."
+            ]
+          },
+          {
+            title: "Đạo đức số qua 4 Lăng kính Quốc tế",
+            icon: "scale",
+            points: [
+              "<strong>UNESCO:</strong> 'Chiếc ô đạo đức toàn cầu' đầu tiên về AI (2021), đặt quyền con người, nhân phẩm và bảo vệ hệ sinh thái làm trung tâm.",
+              "<strong>Microsoft (6 trụ cột AI có trách nhiệm):</strong> 1. Công bằng (Fairness), 2. Đáng tin cậy & An toàn (Reliability & Safety), 3. Bảo mật & Quyền riêng tư (Privacy & Security), 4. Hòa nhập (Inclusiveness), 5. Minh bạch (Transparency), 6. Trách nhiệm giải trình (Accountability).",
+              "<strong>Google:</strong> Cân bằng giữa <em>Đổi mới táo bạo (Bold Innovation)</em> và <em>Phát triển có trách nhiệm (Responsible Development)</em>.",
+              "<strong>OpenAI:</strong> Hiến chương hướng tới Trí tuệ nhân tạo tổng quát (AGI) an toàn và phân phối lợi ích rộng rãi cho toàn nhân loại."
+            ]
+          },
+          {
+            title: "Hành lang Pháp luật Không gian số Việt Nam",
+            icon: "landmark",
+            points: [
+              "<strong>Luật An ninh mạng (24/2018/QH14):</strong> Bảo vệ an ninh quốc gia và trật tự an toàn xã hội trên không gian mạng.",
+              "<strong>Luật Bảo vệ dữ liệu cá nhân (91/2025/QH15):</strong> Hiệu lực từ <strong>01/01/2026</strong>, siết chặt quyền đồng ý của chủ thể dữ liệu, chống mua bán dữ liệu trái phép.",
+              "<strong>Luật Trí tuệ nhân tạo (134/2025/QH15):</strong> Hiệu lực từ <strong>01/03/2026</strong>, thiết lập khung pháp lý quản lý rủi ro, thúc đẩy đổi mới sáng tạo AI an toàn tại Việt Nam."
+            ]
+          },
+          {
+            title: "Deepfake, Synthetic Media & 3 Tuyến phòng thủ",
+            icon: "eye-off",
+            points: [
+              "<strong>Ma trận rủi ro Deepfake:</strong> <em>Cá nhân</em> (lừa đảo cuộc gọi video giả danh người thân, bôi nhọ danh dự); <em>Tổ chức</em> (giả mạo CEO chuyển tiền, thao túng tài chính); <em>Xã hội</em> (tin giả bầu cử, xói mòn niềm tin số).",
+              "<strong>3 Tuyến phòng thủ toàn cầu:</strong> (1) <em>Chính sách & Pháp lý</em> (EU AI Act, WIPO, Luật AI VN yêu cầu gắn nhãn nội dung AI); (2) <em>Công nghệ nhận diện</em> (AI phát hiện bất thường điểm ảnh/âm thanh); (3) <em>Xác thực nguồn gốc nội dung</em> (Tiêu chuẩn mở <strong>C2PA</strong> gắn chữ ký số từ lúc chụp/tạo)."
+            ]
+          }
+        ],
+        diagramTitle: "Tam giác Bảo mật CIA & 3 Tuyến Phòng thủ Chống Deepfake",
+        diagramSvg: `
+          <svg viewBox="0 0 820 260" class="w-full h-auto" xmlns="http://www.w3.org/2000/svg">
+            <!-- CIA Triangle -->
+            <polygon points="200,30 60,210 340,210" fill="#eef2ff" stroke="#4f46e5" stroke-width="3"/>
+            <circle cx="200" cy="145" r="34" fill="#4f46e5"/>
+            <text x="200" y="149" text-anchor="middle" fill="#fff" font-size="13" font-weight="bold">CIA</text>
+
+            <rect x="120" y="12" width="160" height="32" rx="8" fill="#1e1b4b"/>
+            <text x="200" y="32" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Confidentiality (Bảo mật)</text>
+
+            <rect x="15" y="195" width="165" height="32" rx="8" fill="#0284c7"/>
+            <text x="97" y="215" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Integrity (Toàn vẹn)</text>
+
+            <rect x="220" y="195" width="165" height="32" rx="8" fill="#0d9488"/>
+            <text x="302" y="215" text-anchor="middle" fill="#fff" font-size="11" font-weight="bold">Availability (Sẵn sàng)</text>
+
+            <!-- 3 Defense Lines -->
+            <rect x="415" y="20" width="380" height="215" rx="14" fill="#0f172a"/>
+            <text x="605" y="46" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="bold">3 TUYẾN PHÒNG THỦ CHỐNG DEEPFAKE</text>
+
+            <rect x="435" y="62" width="340" height="44" rx="8" fill="#1e293b" stroke="#6366f1"/>
+            <text x="605" y="81" text-anchor="middle" fill="#a5b4fc" font-size="11" font-weight="bold">1. Hành lang Chính sách & Pháp lý</text>
+            <text x="605" y="97" text-anchor="middle" fill="#cbd5e1" font-size="10">EU AI Act, WIPO, Luật AI VN (134/2025/QH15)</text>
+
+            <rect x="435" y="118" width="340" height="44" rx="8" fill="#1e293b" stroke="#34d399"/>
+            <text x="605" y="137" text-anchor="middle" fill="#6ee7b7" font-size="11" font-weight="bold">2. Công nghệ Nhận diện (AI Detection)</text>
+            <text x="605" y="153" text-anchor="middle" fill="#cbd5e1" font-size="10">Phân tích vi biểu cảm, quang phổ âm thanh giả</text>
+
+            <rect x="435" y="174" width="340" height="44" rx="8" fill="#1e293b" stroke="#fbbf24"/>
+            <text x="605" y="193" text-anchor="middle" fill="#fcd34d" font-size="11" font-weight="bold">3. Xác thực Nguồn gốc (Chuẩn C2PA)</text>
+            <text x="605" y="209" text-anchor="middle" fill="#cbd5e1" font-size="10">Content Credentials gắn chữ ký xác thực gốc</text>
+          </svg>
+        `,
+        comparisonTable: {
+          headers: ["Văn bản Luật Việt Nam", "Số hiệu", "Hiệu lực thi hành", "Nội dung trọng tâm"],
+          rows: [
+            ["Luật An ninh mạng", "24/2018/QH14", "01/01/2019", "Bảo vệ hệ thống thông tin quan trọng, phòng chống tấn công mạng và thông tin xấu độc."],
+            ["Luật Bảo vệ dữ liệu cá nhân", "91/2025/QH15", "01/01/2026", "Bảo vệ quyền riêng tư, quy định trách nhiệm của bên kiểm soát & xử lý dữ liệu cá nhân."],
+            ["Luật Trí tuệ nhân tạo", "134/2025/QH15", "01/03/2026", "Quản trị AI theo mức độ rủi ro, yêu cầu minh bạch, gắn nhãn nội dung AI và thúc đẩy R&D."]
+          ]
+        },
+        videos: [
+          {
+            title: "The CIA Triad Explained (Confidentiality, Integrity, Availability)",
+            channel: "IBM Technology",
+            duration: "06:05",
+            youtubeId: "r6-37464589",
+            desc: "Phân tích nền tảng bộ ba bảo mật thông tin và cách áp dụng thực tế."
+          },
+          {
+            title: "How to spot a deepfake | TED-Ed",
+            channel: "TED-Ed",
+            duration: "05:12",
+            youtubeId: "gLoI9hAX9dw",
+            desc: "Cơ chế tạo ra Deepfake và dấu hiệu nhận biết phương tiện tổng hợp."
+          }
+        ],
+        resources: [
+          { title: "UNESCO - Recommendation on the Ethics of Artificial Intelligence", url: "https://www.unesco.org/en/artificial-intelligence/recommendation-ethics", tag: "UNESCO" },
+          { title: "C2PA - Coalition for Content Provenance and Authenticity", url: "https://c2pa.org", tag: "Chuẩn C2PA" },
+          { title: "Cổng Thông tin Điện tử Quốc hội Việt Nam (Tra cứu Luật)", url: "https://quochoi.vn", tag: "Pháp luật VN" }
+        ]
+      }
+    ];
+
+    // =========================================================================
+    // 2. DỮ LIỆU FLASHCARDS & TRẮC NGHIỆM 10 CÂU TỔNG HỢP
+    // =========================================================================
+    const FLASHCARDS_DATA = [
+      { module: "Chuyên đề 1", q: "3V trong Dữ liệu lớn (Big Data) gồm những yếu tố nào?", a: "Volume (Khối lượng lớn), Velocity (Tốc độ xử lý nhanh theo thời gian thực) và Variety (Đa dạng định dạng dữ liệu)." },
+      { module: "Chuyên đề 1", q: "3 trụ cột của Chuyển đổi số Quốc gia tại Việt Nam là gì?", a: "1. Chính phủ số — 2. Kinh tế số (mục tiêu 20% GDP năm 2025, 30% năm 2030) — 3. Xã hội số." },
+      { module: "Chuyên đề 2", q: "Kiến trúc Von Neumann gồm những khối chức năng cơ bản nào?", a: "CPU (gồm CU, ALU, Registers), Bộ nhớ chính (Memory), Thiết bị Nhập/Xuất (I/O) và Hệ thống Bus kết nối." },
+      { module: "Chuyên đề 3", q: "Phân biệt Kernel và Shell trong Hệ điều hành?", a: "Kernel (Nhân) giao tiếp trực tiếp điều phối phần cứng (CPU, RAM); Shell (Vỏ) cung cấp giao diện GUI hoặc CLI để người dùng tương tác." },
+      { module: "Chuyên đề 4", q: "Kể tên 3 mô hình dịch vụ Điện toán đám mây phổ biến nhất?", a: "IaaS (Hạ tầng: Amazon EC2), PaaS (Nền tảng: Heroku, App Engine) và SaaS (Phần mềm: Google Workspace, Microsoft 365)." },
+      { module: "Chuyên đề 5", q: "Đơn vị dữ liệu (PDU) tại 4 tầng trên xuống của mô hình mạng?", a: "Message/Data (Ứng dụng) -> Segment (Giao vận) -> Datagram/Packet (Mạng) -> Frame (Liên kết dữ liệu) -> Bits (Vật lý)." },
+      { module: "Chuyên đề 6", q: "4 trụ cột của Tư duy máy tính (Computational Thinking) là gì?", a: "1. Phân rã (Decomposition), 2. Nhận diện khuôn mẫu (Pattern Recognition), 3. Trừu tượng hóa (Abstraction), 4. Thiết kế thuật toán (Algorithm Design)." },
+      { module: "Chuyên đề 6", q: "Phân biệt BPA, RPA và IaC trong Tự động hóa IT?", a: "BPA: Tự động hóa quy trình nghiệp vụ vĩ mô; RPA: Robot thao tác trên giao diện UI; IaC: Quản lý hạ tầng máy chủ bằng mã." },
+      { module: "Chuyên đề 7", q: "Công thức R-C-T-F trong Prompt Engineering viết tắt của từ gì?", a: "Role (Vai trò) + Context (Bối cảnh) + Task (Nhiệm vụ) + Format (Định dạng đầu ra)." },
+      { module: "Chuyên đề 8", q: "Thời điểm có hiệu lực của Luật Bảo vệ dữ liệu cá nhân (91/2025/QH15) và Luật Trí tuệ nhân tạo (134/2025/QH15)?", a: "Luật Bảo vệ dữ liệu cá nhân có hiệu lực từ 01/01/2026; Luật Trí tuệ nhân tạo có hiệu lực từ 01/03/2026." }
+    ];
+
+    const QUIZ_DATA = [
+      {
+        q: "Cuộc Cách mạng Công nghiệp lần thứ 4 (CMCN 4.0) bắt đầu vào khoảng thời gian nào và dựa trên nền tảng gì?",
+        options: [
+          "1760–1840, dựa trên động cơ hơi nước",
+          "1870–đầu TK 20, dựa trên điện năng và dây chuyền sản xuất",
+          "Khoảng 1970, dựa trên máy tính điện tử và tự động hóa",
+          "Khoảng 2010–nay, hợp nhất thế giới thực – ảo dựa trên AI, IoT, Big Data"
+        ],
+        answer: 3,
+        explain: "CMCN 4.0 khởi phát từ thập niên 2010 với sự hội tụ của AI, IoT, Big Data và Điện toán đám mây."
+      },
+      {
+        q: "Theo chiến lược Chuyển đổi số Quốc gia Việt Nam, mục tiêu tỷ trọng Kinh tế số trong GDP vào năm 2025 và 2030 lần lượt là:",
+        options: [
+          "10% và 15%",
+          "20% và 30%",
+          "25% và 40%",
+          "15% và 25%"
+        ],
+        answer: 1,
+        explain: "Việt Nam đặt mục tiêu kinh tế số đạt 20% GDP vào năm 2025 và 30% GDP vào năm 2030."
+      },
+      {
+        q: "Trong CPU theo kiến trúc Von Neumann, thành phần nào thực hiện các phép cộng, trừ và so sánh logic?",
+        options: [
+          "CU (Control Unit)",
+          "ALU (Arithmetic Logic Unit)",
+          "ROM (Read-Only Memory)",
+          "BIOS"
+        ],
+        answer: 1,
+        explain: "ALU (Khối tính toán số học và logic) đảm nhiệm toàn bộ phép tính toán học và logic của CPU."
+      },
+      {
+        q: "Hệ điều hành nào sử dụng nhân mã nguồn mở, miễn phí và thống trị trên các hệ thống máy chủ (Server) và Cloud?",
+        options: [
+          "Windows 11",
+          "macOS",
+          "Linux (Ubuntu, CentOS, Debian)",
+          "iOS"
+        ],
+        answer: 2,
+        explain: "Linux là hệ điều hành mã nguồn mở ổn định, bảo mật cao, chiếm đa số trên máy chủ web và hạ tầng đám mây."
+      },
+      {
+        q: "Google Workspace và Microsoft 365 thuộc mô hình dịch vụ Điện toán đám mây nào?",
+        options: [
+          "IaaS (Infrastructure as a Service)",
+          "PaaS (Platform as a Service)",
+          "SaaS (Software as a Service)",
+          "On-Premises"
+        ],
+        answer: 2,
+        explain: "SaaS cung cấp phần mềm ứng dụng hoàn chỉnh cho người dùng cuối sử dụng trực tiếp qua Internet."
+      },
+      {
+        q: "Trong quá trình đóng gói dữ liệu (Encapsulation) theo mô hình mạng, đơn vị dữ liệu tại Tầng Mạng (Network Layer) được gọi là gì?",
+        options: [
+          "Segment",
+          "Datagram / Packet",
+          "Frame",
+          "Bits"
+        ],
+        answer: 1,
+        explain: "Thứ tự đóng gói: Message (Ứng dụng) -> Segment (Giao vận) -> Datagram/Packet (Mạng) -> Frame (Liên kết) -> Bits (Vật lý)."
+      },
+      {
+        q: "Đâu là đặc điểm của giao thức UDP so với TCP?",
+        options: [
+          "Bắt tay 3 bước trước khi truyền dữ liệu",
+          "Đảm bảo gửi lại toàn bộ gói tin bị mất",
+          "Không thiết lập kết nối trước, tốc độ cao, độ trễ thấp phù hợp Livestream/VoIP",
+          "Chỉ hoạt động trên địa chỉ IPv6"
+        ],
+        answer: 2,
+        explain: "UDP (User Datagram Protocol) ưu tiên tốc độ và độ trễ thấp thay vì kiểm tra xác nhận từng gói tin như TCP."
+      },
+      {
+        q: "Trong Tự động hóa IT (IT Automation), công nghệ nào dùng robot phần mềm mô phỏng thao tác chuột và bàn phím trên giao diện ứng dụng?",
+        options: [
+          "IaC (Infrastructure as Code)",
+          "RPA (Robotic Process Automation)",
+          "DNS (Domain Name System)",
+          "BIOS"
+        ],
+        answer: 1,
+        explain: "RPA (Robotic Process Automation) tự động hóa các tác vụ lặp lại ở cấp độ giao diện người dùng (UI)."
+      },
+      {
+        q: "Chữ 'C' trong bộ ba bảo mật thông tin CIA (CIA Triad) đại diện cho nguyên tắc nào?",
+        options: [
+          "Cloud Computing (Điện toán đám mây)",
+          "Confidentiality (Tính Bảo mật - chỉ người có thẩm quyền mới được truy cập)",
+          "Connectivity (Tính Kết nối)",
+          "Compliance (Tuân thủ)"
+        ],
+        answer: 1,
+        explain: "CIA Triad gồm: Confidentiality (Tính Bảo mật), Integrity (Tính Toàn vẹn) và Availability (Tính Sẵn sàng)."
+      },
+      {
+        q: "Tiêu chuẩn kỹ thuật mở nào giúp gắn chữ ký số xác thực nguồn gốc nội dung ngay từ lúc tạo để phòng chống Deepfake?",
+        options: [
+          "C2PA (Coalition for Content Provenance and Authenticity)",
+          "IEEE 802.11",
+          "FAT32",
+          "SMTP"
+        ],
+        answer: 0,
+        explain: "C2PA là tuyến phòng thủ xác thực nguồn gốc nội dung số (Content Credentials) giúp nhận diện nội dung thật và nội dung AI chỉnh sửa."
+      }
+    ];
+
+    // =========================================================================
+    // 3. QUẢN LÝ TRẠNG THÁI (STATE & LOCALSTORAGE)
+    // =========================================================================
+    const STORAGE_KEY_COMPLETED = 'it40_completed_modules_v1';
+    const STORAGE_KEY_NOTES = 'it40_personal_notes_v1';
+    const STORAGE_KEY_THEME = 'it40_theme_v1';
+
+    let state = {
+      mode: 'module', // 'module' | 'flashcards' | 'quiz'
+      activeModuleId: 1,
+      searchQuery: '',
+      completedModules: JSON.parse(localStorage.getItem(STORAGE_KEY_COMPLETED) || '[]'),
+      notes: JSON.parse(localStorage.getItem(STORAGE_KEY_NOTES) || '{}'),
+      flashcardIndex: 0,
+      flashcardFlipped: false,
+      quizAnswers: {},
+      quizSubmitted: false
+    };
+
+    // Khởi tạo giao diện sáng/tối
+    function initTheme() {
+      const savedTheme = localStorage.getItem(STORAGE_KEY_THEME);
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem(STORAGE_KEY_THEME, isDark ? 'dark' : 'light');
+      showToast(isDark ? 'Đã bật giao diện Tối (Dark Mode)' : 'Đã bật giao diện Sáng (Light Mode)');
+    }
+
+    // =========================================================================
+    // 4. TIỆN ÍCH UI (TOAST, SIDEBAR, MODAL)
+    // =========================================================================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const colors = type === 'success'
+        ? 'bg-emerald-600 text-white'
+        : 'bg-slate-900 dark:bg-slate-800 text-white border border-slate-700';
+
+      toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg text-xs font-medium flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0 ${colors}`;
+      toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'info'}" class="w-4 h-4 shrink-0"></i><span>${message}</span>`;
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 2600);
+    }
+
+    function toggleSidebar(open) {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (open) {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    function resetProgressConfirm() {
+      const modal = document.getElementById('reset-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeResetModal() {
+      const modal = document.getElementById('reset-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function executeReset() {
+      state.completedModules = [];
+      state.notes = {};
+      localStorage.removeItem(STORAGE_KEY_COMPLETED);
+      localStorage.removeItem(STORAGE_KEY_NOTES);
+      closeResetModal();
+      renderSidebar();
+      renderMain();
+      showToast('Đã đặt lại toàn bộ tiến độ và ghi chú cá nhân.');
+    }
+
+    // =========================================================================
+    // 5. LOGIC TÌM KIẾM & TIẾN ĐỘ HỌC TẬP
+    // =========================================================================
+    function handleSearch(val) {
+      state.searchQuery = val.trim().toLowerCase();
+      const clearBtn = document.getElementById('clear-search-btn');
+      if (state.searchQuery) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      renderSidebar();
+      if (state.mode === 'module') {
+        renderMain();
+      }
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('search-input');
+      input.value = '';
+      handleSearch('');
+    }
+
+    function toggleModuleComplete(id) {
+      const idx = state.completedModules.indexOf(id);
+      if (idx === -1) {
+        state.completedModules.push(id);
+        showToast(`Chúc mừng! Đã hoàn thành Chuyên đề ${id}`, 'success');
+      } else {
+        state.completedModules.splice(idx, 1);
+        showToast(`Đã bỏ đánh dấu hoàn thành Chuyên đề ${id}`);
+      }
+      localStorage.setItem(STORAGE_KEY_COMPLETED, JSON.stringify(state.completedModules));
+      renderSidebar();
+      renderMain();
+    }
+
+    function savePersonalNote(moduleId) {
+      const textarea = document.getElementById(`note-textarea-${moduleId}`);
+      if (!textarea) return;
+      state.notes[moduleId] = textarea.value;
+      localStorage.setItem(STORAGE_KEY_NOTES, JSON.stringify(state.notes));
+      showToast('Đã lưu ghi chú cá nhân vào trình duyệt!', 'success');
+    }
+
+    function switchMode(newMode, moduleId = null) {
+      state.mode = newMode;
+      if (moduleId !== null) {
+        state.activeModuleId = moduleId;
+      }
+      toggleSidebar(false);
+      renderSidebar();
+      renderMain();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // =========================================================================
+    // 6. RENDER SIDEBAR & PROGRESS BAR
+    // =========================================================================
+    function renderSidebar() {
+      // Cập nhật thanh tiến độ
+      const count = state.completedModules.length;
+      const pct = Math.round((count / MODULES_DATA.length) * 100);
+      document.getElementById('progress-text').textContent = `${count}/${MODULES_DATA.length} chuyên đề (${pct}%)`;
+      document.getElementById('progress-bar').style.width = `${pct}%`;
+
+      // Lọc chuyên đề theo Live Search
+      const filtered = MODULES_DATA.filter(m => {
+        if (!state.searchQuery) return true;
+        const fullText = JSON.stringify(m).toLowerCase();
+        return fullText.includes(state.searchQuery);
+      });
+
+      const listEl = document.getElementById('module-list');
+      if (filtered.length === 0) {
+        listEl.innerHTML = `
+          <div class="p-4 text-center text-xs text-slate-400">
+            Không tìm thấy chuyên đề nào khớp với "<strong>${state.searchQuery}</strong>"
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = filtered.map(m => {
+        const isActive = state.mode === 'module' && state.activeModuleId === m.id;
+        const isDone = state.completedModules.includes(m.id);
+        const hasNote = Boolean(state.notes[m.id] && state.notes[m.id].trim().length > 0);
+
+        return `
+          <button
+            onclick="switchMode('module', ${m.id})"
+            class="w-full text-left p-2.5 rounded-xl transition flex items-start gap-2.5 group ${
+              isActive
+                ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-semibold ring-1 ring-brand-500/30'
+                : 'hover:bg-slate-100 dark:hover:bg-slate-800/70 text-slate-700 dark:text-slate-300'
+            }"
+          >
+            <div class="mt-0.5 shrink-0">
+              ${isDone
+                ? `<span class="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center"><i data-lucide="check" class="w-3 h-3"></i></span>`
+                : `<span class="w-5 h-5 rounded-full border ${isActive ? 'border-brand-500 text-brand-600' : 'border-slate-300 dark:border-slate-600 text-slate-400'} text-[11px] font-bold flex items-center justify-center">${m.id}</span>`
+              }
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="text-xs leading-snug line-clamp-2">${m.title.replace(/^Chuyên đề \d+:\s*/, '')}</div>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-200/70 dark:bg-slate-800 text-slate-500 dark:text-slate-400">${m.code}</span>
+                ${hasNote ? `<span class="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-0.5"><i data-lucide="sticky-note" class="w-2.5 h-2.5"></i>Ghi chú</span>` : ''}
+              </div>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // Highlight từ khóa tìm kiếm trong nội dung
+    function highlightText(html) {
+      if (!state.searchQuery || state.searchQuery.length < 2) return html;
+      const escaped = state.searchQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(?![^<]*>)(${escaped})`, 'gi');
+      return html.replace(regex, '<mark class="bg-amber-200 dark:bg-amber-500/40 text-slate-900 dark:text-white px-0.5 rounded">$1</mark>');
+    }
+
+    // =========================================================================
+    // 7. RENDER NỘI DUNG CHÍNH (CHUYÊN ĐỀ / FLASHCARDS / QUIZ)
+    // =========================================================================
+    function renderMain() {
+      const main = document.getElementById('main-content');
+      const breadcrumb = document.getElementById('breadcrumb-current');
+
+      if (state.mode === 'flashcards') {
+        breadcrumb.textContent = 'Thẻ ghi nhớ Flashcards';
+        renderFlashcardsView(main);
+        return;
+      }
+
+      if (state.mode === 'quiz') {
+        breadcrumb.textContent = 'Trắc nghiệm tổng hợp 10 câu';
+        renderQuizView(main);
+        return;
+      }
+
+      // Chế độ xem chi tiết Chuyên đề
+      const mod = MODULES_DATA.find(m => m.id === state.activeModuleId) || MODULES_DATA[0];
+      breadcrumb.textContent = `${mod.code}: ${mod.title}`;
+      const isDone = state.completedModules.includes(mod.id);
+      const userNote = state.notes[mod.id] || '';
+
+      const prevMod = MODULES_DATA.find(m => m.id === mod.id - 1);
+      const nextMod = MODULES_DATA.find(m => m.id === mod.id + 1);
+
+      const badgeStyle = mod.badgeColor === 'indigo'
+        ? 'bg-brand-100 text-brand-700 dark:bg-brand-950 dark:text-brand-300 border-brand-200 dark:border-brand-800'
+        : 'bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800';
+
+      main.innerHTML = `
+        <!-- Hero Banner của Chuyên đề -->
+        <section class="rounded-3xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm mb-8">
+          <div class="relative h-44 sm:h-56 w-full overflow-hidden bg-slate-900">
+            <img
+              src="${mod.coverUrl}"
+              alt="${mod.title}"
+              onerror="this.onerror=null;this.src='https://placehold.co/1200x400/1e1b4b/e0e7ff?text=CNTT+4.0+%26+Chuyen+Doi+So';"
+              class="w-full h-full object-cover opacity-55"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/50 to-transparent"></div>
+            <div class="absolute bottom-4 left-5 right-5 sm:bottom-6 sm:left-8 sm:right-8 flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                  <span class="px-2.5 py-1 rounded-lg text-xs font-bold bg-white/15 backdrop-blur-md text-white border border-white/20">${mod.code}</span>
+                  <span class="px-2.5 py-1 rounded-lg text-xs font-semibold border ${badgeStyle}">${mod.badge}</span>
+                </div>
+                <h2 class="font-display font-extrabold text-xl sm:text-3xl text-white leading-tight">${highlightText(mod.title)}</h2>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-5 sm:px-8 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900">
+            <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">${highlightText(mod.subtitle)}</p>
+            <button
+              onclick="toggleModuleComplete(${mod.id})"
+              class="shrink-0 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition shadow-xs ${
+                isDone
+                  ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                  : 'bg-slate-900 text-white hover:bg-slate-800 dark:bg-brand-600 dark:hover:bg-brand-500'
+              }"
+            >
+              <i data-lucide="${isDone ? 'check-circle-2' : 'circle'}" class="w-4 h-4"></i>
+              ${isDone ? 'Đã hoàn thành chuyên đề' : 'Đánh dấu đã học xong'}
+            </button>
+          </div>
+        </section>
+
+        <!-- 1. TÓM TẮT KIẾN THỨC CỐT LÕI (KEY TAKEAWAYS) -->
+        <section class="mb-8">
+          <div class="flex items-center gap-2.5 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+              <i data-lucide="book-open-check" class="w-4 h-4"></i>
+            </div>
+            <h3 class="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-white">Tóm tắt Kiến thức Cốt lõi (Key Takeaways)</h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            ${mod.keyTakeaways.map(card => `
+              <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-2xs hover:border-brand-300 dark:hover:border-brand-700 transition">
+                <div class="flex items-center gap-2.5 mb-3">
+                  <div class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-brand-600 dark:text-brand-400 flex items-center justify-center shrink-0">
+                    <i data-lucide="${card.icon}" class="w-4 h-4"></i>
+                  </div>
+                  <h4 class="font-display font-bold text-base text-slate-900 dark:text-white leading-snug">${highlightText(card.title)}</h4>
+                </div>
+                <ul class="space-y-2.5 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  ${card.points.map(pt => `
+                    <li class="flex items-start gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-brand-500 mt-2 shrink-0"></span>
+                      <span>${highlightText(pt)}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+
+        <!-- 2. SƠ ĐỒ MINH HỌA TRỰC QUAN (SVG INFOGRAPHIC) -->
+        <section class="mb-8">
+          <div class="flex items-center gap-2.5 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-cyan-100 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-400 flex items-center justify-center">
+              <i data-lucide="workflow" class="w-4 h-4"></i>
+            </div>
+            <h3 class="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-white">${mod.diagramTitle}</h3>
+          </div>
+          <div class="p-4 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-x-auto">
+            ${mod.diagramSvg}
+          </div>
+        </section>
+
+        <!-- 3. BẢNG SO SÁNH & HỆ THỐNG HÓA -->
+        ${mod.comparisonTable ? `
+        <section class="mb-8">
+          <div class="flex items-center gap-2.5 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+              <i data-lucide="table" class="w-4 h-4"></i>
+            </div>
+            <h3 class="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-white">Bảng So sánh & Hệ thống hóa Kiến thức</h3>
+          </div>
+          <div class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-slate-100/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700">
+                  ${mod.comparisonTable.headers.map(h => `<th class="p-3.5 font-display font-bold text-slate-800 dark:text-slate-100">${h}</th>`).join('')}
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                ${mod.comparisonTable.rows.map(row => `
+                  <tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition">
+                    ${row.map((cell, i) => `<td class="p-3.5 ${i === 0 ? 'font-semibold text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'}">${highlightText(cell)}</td>`).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        ` : ''}
+
+        <!-- 4. VIDEO HỌC TẬP LIÊN QUAN (NHÚNG YOUTUBE GIÁO DỤC) -->
+        <section class="mb-8">
+          <div class="flex items-center justify-between gap-2 mb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+                <i data-lucide="play-circle" class="w-4 h-4"></i>
+              </div>
+              <h3 class="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-white">Video Bài giảng & Minh họa Trực quan</h3>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            ${mod.videos.map(v => `
+              <div class="rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col">
+                <div class="relative aspect-video bg-slate-950">
+                  <iframe
+                    class="w-full h-full"
+                    src="https://www.youtube-nocookie.com/embed/${v.youtubeId}"
+                    title="${v.title}"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    loading="lazy"
+                  ></iframe>
+                </div>
+                <div class="p-4 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+                      <span class="font-semibold text-brand-600 dark:text-brand-400">${v.channel}</span>
+                      <span>${v.duration}</span>
+                    </div>
+                    <h4 class="font-display font-bold text-sm text-slate-900 dark:text-white mb-1.5">${v.title}</h4>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-3">${v.desc}</p>
+                  </div>
+                  <a href="https://www.youtube.com/watch?v=${v.youtubeId}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:underline">
+                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                    Mở trên YouTube
+                  </a>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+
+        <!-- 5. KHO TÀI LIỆU & LIÊN KẾT CHÍNH THỐNG -->
+        <section class="mb-8">
+          <div class="flex items-center gap-2.5 mb-4">
+            <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+              <i data-lucide="link" class="w-4 h-4"></i>
+            </div>
+            <h3 class="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-white">Kho Tài liệu & Liên kết Tham khảo Chính thống</h3>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            ${mod.resources.map(res => `
+              <a href="${res.url}" target="_blank" rel="noopener noreferrer" class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-500 transition group flex flex-col justify-between">
+                <div>
+                  <span class="inline-block px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 mb-2">${res.tag}</span>
+                  <h4 class="font-semibold text-sm text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition leading-snug">${res.title}</h4>
+                </div>
+                <div class="mt-3 flex items-center gap-1 text-xs font-medium text-brand-600 dark:text-brand-400">
+                  <span>Truy cập tài liệu</span>
+                  <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i>
+                </div>
+              </a>
+            `).join('')}
+          </div>
+        </section>
+
+        <!-- 6. SỔ TAY GHI CHÚ CÁ NHÂN (LƯU TRÊN TRÌNH DUYỆT) -->
+        <section class="mb-10 p-5 sm:p-6 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-800/50">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2">
+              <i data-lucide="notebook-pen" class="w-5 h-5 text-amber-600 dark:text-amber-400"></i>
+              <h3 class="font-display font-bold text-base sm:text-lg text-slate-900 dark:text-white">Ghi chú Cá nhân cho ${mod.code}</h3>
+            </div>
+            <span class="text-xs text-slate-500 dark:text-slate-400">Tự động lưu trữ cục bộ trên thiết bị của bạn</span>
+          </div>
+          <textarea
+            id="note-textarea-${mod.id}"
+            rows="4"
+            placeholder="Ghi lại ý hiểu của bạn, câu hỏi cần thảo luận trên lớp hoặc ví dụ thực tế cho chuyên đề này..."
+            class="w-full p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 outline-none transition mb-3"
+          >${userNote}</textarea>
+          <div class="flex justify-end">
+            <button onclick="savePersonalNote(${mod.id})" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-amber-600 text-white hover:bg-amber-700 transition shadow-xs">
+              <i data-lucide="save" class="w-4 h-4"></i>
+              Lưu ghi chú
+            </button>
+          </div>
+        </section>
+
+        <!-- Điều hướng Chuyên đề Trước / Tiếp theo -->
+        <div class="flex items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+          ${prevMod ? `
+            <button onclick="switchMode('module', ${prevMod.id})" class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 transition text-left max-w-[48%]">
+              <i data-lucide="arrow-left" class="w-4 h-4 text-slate-400 shrink-0"></i>
+              <div class="truncate">
+                <div class="text-[11px] text-slate-400">Chuyên đề trước</div>
+                <div class="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">${prevMod.title}</div>
+              </div>
+            </button>
+          ` : '<div></div>'}
+
+          ${nextMod ? `
+            <button onclick="switchMode('module', ${nextMod.id})" class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-brand-500 transition text-right max-w-[48%]">
+              <div class="truncate">
+                <div class="text-[11px] text-slate-400">Chuyên đề tiếp theo</div>
+                <div class="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">${nextMod.title}</div>
+              </div>
+              <i data-lucide="arrow-right" class="w-4 h-4 text-slate-400 shrink-0"></i>
+            </button>
+          ` : `
+            <button onclick="switchMode('quiz')" class="flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 text-white font-semibold text-sm hover:bg-emerald-700 transition">
+              <span>Làm bài Trắc nghiệm Tổng hợp</span>
+              <i data-lucide="award" class="w-4 h-4"></i>
+            </button>
+          `}
+        </div>
+      `;
+
+      lucide.createIcons();
+    }
+
+    // =========================================================================
+    // 8. CHẾ ĐỘ FLASHCARDS ÔN TẬP NHANH
+    // =========================================================================
+    function renderFlashcardsView(container) {
+      const card = FLASHCARDS_DATA[state.flashcardIndex];
+      const total = FLASHCARDS_DATA.length;
+
+      container.innerHTML = `
+        <div class="max-w-2xl mx-auto">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="font-display font-extrabold text-2xl text-slate-900 dark:text-white">Thẻ ghi nhớ Ôn tập (Flashcards)</h2>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Nhấp vào thẻ để lật xem đáp án cốt lõi từ 8 chuyên đề.</p>
+            </div>
+            <button onclick="switchMode('module', state.activeModuleId)" class="px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              Quay lại bài học
+            </button>
+          </div>
+
+          <div class="mb-3 flex items-center justify-between text-xs font-semibold text-slate-500">
+            <span class="px-2.5 py-1 rounded-lg bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300">${card.module}</span>
+            <span>Thẻ ${state.flashcardIndex + 1} / ${total}</span>
+          </div>
+
+          <!-- Thẻ 3D lật -->
+          <div onclick="flipFlashcard()" class="perspective-1000 cursor-pointer select-none mb-6">
+            <div class="relative w-full min-h-[270px] transform-style-3d ${state.flashcardFlipped ? 'rotate-y-180' : ''}">
+              <!-- Mặt trước (Câu hỏi) -->
+              <div class="absolute inset-0 backface-hidden rounded-3xl bg-white dark:bg-slate-900 border-2 border-brand-200 dark:border-slate-700 p-8 shadow-md flex flex-col items-center justify-center text-center">
+                <span class="text-xs font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400 mb-3">CÂU HỎI ÔN TẬP</span>
+                <h3 class="font-display font-bold text-xl sm:text-2xl text-slate-900 dark:text-white leading-snug">${card.q}</h3>
+                <span class="mt-6 text-xs text-slate-400 flex items-center gap-1.5">
+                  <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> Chạm để xem đáp án
+                </span>
+              </div>
+
+              <!-- Mặt sau (Đáp án) -->
+              <div class="absolute inset-0 backface-hidden rotate-y-180 rounded-3xl bg-gradient-to-br from-brand-600 to-cyan-600 text-white p-8 shadow-md flex flex-col items-center justify-center text-center">
+                <span class="text-xs font-bold uppercase tracking-wider text-cyan-200 mb-3">ĐÁP ÁN CHUẨN</span>
+                <p class="text-base sm:text-lg font-medium leading-relaxed">${card.a}</p>
+                <span class="mt-6 text-xs text-white/75 flex items-center gap-1.5">
+                  <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Chạm để quay lại câu hỏi
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Điều hướng thẻ -->
+          <div class="flex items-center justify-between gap-3">
+            <button onclick="prevFlashcard()" class="flex-1 py-3 px-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 font-semibold text-sm hover:border-brand-500 transition flex items-center justify-center gap-2">
+              <i data-lucide="chevron-left" class="w-4 h-4"></i> Thẻ trước
+            </button>
+            <button onclick="flipFlashcard()" class="py-3 px-5 rounded-xl bg-amber-500 text-white font-semibold text-sm hover:bg-amber-600 transition">
+              Lật thẻ
+            </button>
+            <button onclick="nextFlashcard()" class="flex-1 py-3 px-4 rounded-xl bg-brand-600 text-white font-semibold text-sm hover:bg-brand-700 transition flex items-center justify-center gap-2">
+              Thẻ tiếp <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    function flipFlashcard() {
+      state.flashcardFlipped = !state.flashcardFlipped;
+      renderMain();
+    }
+
+    function nextFlashcard() {
+      state.flashcardFlipped = false;
+      state.flashcardIndex = (state.flashcardIndex + 1) % FLASHCARDS_DATA.length;
+      renderMain();
+    }
+
+    function prevFlashcard() {
+      state.flashcardFlipped = false;
+      state.flashcardIndex = (state.flashcardIndex - 1 + FLASHCARDS_DATA.length) % FLASHCARDS_DATA.length;
+      renderMain();
+    }
+
+    // =========================================================================
+    // 9. CHẾ ĐỘ TRẮC NGHIỆM 10 CÂU TỔNG HỢP
+    // =========================================================================
+    function renderQuizView(container) {
+      let score = 0;
+      if (state.quizSubmitted) {
+        QUIZ_DATA.forEach((item, idx) => {
+          if (state.quizAnswers[idx] === item.answer) score++;
+        });
+      }
+
+      container.innerHTML = `
+        <div class="max-w-3xl mx-auto">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 class="font-display font-extrabold text-2xl text-slate-900 dark:text-white">Kiểm tra Trắc nghiệm Tổng hợp (10 Câu)</h2>
+              <p class="text-sm text-slate-500 dark:text-slate-400">Đánh giá mức độ nắm vững kiến thức toàn diện 8 chuyên đề.</p>
+            </div>
+            <button onclick="switchMode('module', state.activeModuleId)" class="px-3.5 py-2 rounded-xl text-xs font-semibold border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+              Quay lại bài học
+            </button>
+          </div>
+
+          ${state.quizSubmitted ? `
+            <div class="p-6 rounded-2xl mb-6 bg-gradient-to-r from-brand-600 to-emerald-600 text-white shadow-lg flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div>
+                <div class="text-xs uppercase font-bold tracking-wider text-white/80">KẾT QUẢ BÀI LÀM</div>
+                <div class="font-display font-extrabold text-3xl mt-1">Điểm số: ${score} / ${QUIZ_DATA.length} (${score * 10}%)</div>
+                <p class="text-sm text-white/90 mt-1">${score >= 8 ? 'Xuất sắc! Bạn đã làm chủ kiến thức Nhập môn CNTT & Kỷ nguyên Số 4.0.' : 'Hãy xem phần giải thích chi tiết bên dưới để củng cố lại các chuyên đề nhé!'}</p>
+              </div>
+              <button onclick="resetQuiz()" class="shrink-0 px-4 py-2.5 rounded-xl bg-white text-slate-900 font-bold text-sm hover:bg-slate-100 transition">
+                Làm lại bài kiểm tra
+              </button>
+            </div>
+          ` : ''}
+
+          <div class="space-y-5">
+            ${QUIZ_DATA.map((item, qIdx) => {
+              const selected = state.quizAnswers[qIdx];
+              return `
+                <div class="p-5 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <div class="font-display font-bold text-base text-slate-900 dark:text-white mb-3.5">
+                    <span class="text-brand-600 dark:text-brand-400 mr-1.5">Câu ${qIdx + 1}:</span>${item.q}
+                  </div>
+                  <div class="space-y-2">
+                    ${item.options.map((opt, oIdx) => {
+                      let optClass = 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60';
+                      if (!state.quizSubmitted && selected === oIdx) {
+                        optClass = 'border-brand-500 bg-brand-50 dark:bg-brand-950/60 text-brand-800 dark:text-brand-200 font-medium';
+                      } else if (state.quizSubmitted) {
+                        if (oIdx === item.answer) {
+                          optClass = 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 font-semibold';
+                        } else if (selected === oIdx && selected !== item.answer) {
+                          optClass = 'border-rose-500 bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-200';
+                        }
+                      }
+
+                      return `
+                        <button
+                          type="button"
+                          ${state.quizSubmitted ? 'disabled' : ''}
+                          onclick="selectQuizOption(${qIdx}, ${oIdx})"
+                          class="w-full text-left p-3.5 rounded-xl border text-sm transition flex items-center gap-3 ${optClass}"
+                        >
+                          <span class="w-6 h-6 rounded-full border border-current flex items-center justify-center text-xs font-bold shrink-0">
+                            ${String.fromCharCode(65 + oIdx)}
+                          </span>
+                          <span>${opt}</span>
+                        </button>
+                      `;
+                    }).join('')}
+                  </div>
+
+                  ${state.quizSubmitted ? `
+                    <div class="mt-3.5 p-3 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                      <strong class="text-brand-600 dark:text-brand-400">Giải thích:</strong> ${item.explain}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          ${!state.quizSubmitted ? `
+            <div class="mt-6 flex justify-end">
+              <button onclick="submitQuiz()" class="px-6 py-3 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 transition shadow-md">
+                Nộp bài & Xem điểm
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    function selectQuizOption(qIdx, oIdx) {
+      state.quizAnswers[qIdx] = oIdx;
+      renderMain();
+    }
+
+    function submitQuiz() {
+      const answeredCount = Object.keys(state.quizAnswers).length;
+      if (answeredCount < QUIZ_DATA.length) {
+        showToast(`Bạn mới trả lời ${answeredCount}/${QUIZ_DATA.length} câu. Hãy hoàn thành tất cả trước khi nộp!`);
+        return;
+      }
+      state.quizSubmitted = true;
+      renderMain();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetQuiz() {
+      state.quizAnswers = {};
+      state.quizSubmitted = false;
+      renderMain();
+    }
+
+    // =========================================================================
+    // 10. KHỞI CHẠY ỨNG DỤNG
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      renderSidebar();
+      renderMain();
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
